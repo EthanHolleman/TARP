@@ -1,0 +1,7 @@
+#ignore fasta files
+*.fna
+*.fasta
+*.fa
+
+#ignore txt files
+*.txt
