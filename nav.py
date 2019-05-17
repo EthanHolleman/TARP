@@ -40,5 +40,3 @@ def headerParser(header):
     superfam = header[-4].replace('Super_Family=','')
 
     return (name,start,end,length,status,superfam)
-
-#clustalo -i my-in-seqs.fa -o my-out-seqs.fa -v
