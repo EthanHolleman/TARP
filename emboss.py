@@ -2,16 +2,17 @@ import subprocess
 
 def embosser(clustalized_file):
     #takes the file produced by clustalize to create conensus file
-    consensus_name = clustalized_file.split('_')[1] + '_consensus'
+    file_parts = clustalized_file.split('_')
+    consensus_name = file_parts[0] + file_parts[1] + '_consensus.fna'
     command = 'em_cons -sequence {} -outseq {}'.format(clustalized_file, consensus_name)
     subprocess.call(command)
 
 def formatConsensus(consensus_file):
     #reformats consensus from embosser to fasta file format
     lines = []
-    with open(conensus_file, 'wr') as con:
+    with open(consensus_file, 'r') as con:
         lines = con.readlines()
-
+    with open(consensus_file, 'w') as con:
         for line in lines:
             if line[0] == '>': con.write('> ' + consensus_file + '\n')
             else:
