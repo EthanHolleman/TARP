@@ -14,3 +14,8 @@ class Element:
         #sends element to 2 line string to be added to fasta file
         return ">{},{},{},{},{}{}".format(self.name,self.startLocation,self.endLocation,self.length,self.status,
         "\n" + self.seq)
+
+    def __eq__(self,other):
+        if self.name == other.name and self.accession == other.accession and self.status == other.status:
+            return True
+        else: return False 

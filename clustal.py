@@ -29,6 +29,10 @@ def clustalize(rep_elements):
     #takes in rep elements of a single type not whole family
     #makes the temp fasta input file and does the good good
 
+    #command for formatting
+    #clustalo -i AllGMR30.fna -o testCon.fna -v -t DNA --force --outfmt clu
+    #need to use em_cons to convert into an actual consensus sequence 
+
     status = element_list[0].status #all elements should be of same status
     input_name = '{}_{}_repElements.fasta'.format(fam,status)
     output_name = '{}_{}_consensus.fasta'.format(fam,status)

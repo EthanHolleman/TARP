@@ -1,6 +1,10 @@
 from element import Element
 
 def readElements(big_File):
+    '''
+    Reads element into dictionary of lists, key names are super families
+    Calls headerParser
+    '''
     superfam_dict = {}
     seq = ''
     header = ''
@@ -25,6 +29,10 @@ def readElements(big_File):
             else:
                 seq = seq + line.strip()
 
+
+    for key in superfam_dict:
+        print(key)
+        print(superfam_dict[key][0].toStringFasta())
     return superfam_dict
 
 
