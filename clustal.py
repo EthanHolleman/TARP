@@ -1,11 +1,14 @@
-import subprocess,random
+
+import os
+import random
+
 
 def seperateTypes(element_list):
-    #creates dictionary of elements, keys are element status
+    # creates dictionary of elements, keys are element status
     INTACT = 'INTACT'
     SOLO = 'SOLO'
     pass
-    status_dict = {INTACT : [], SOLO : []}
+    status_dict = {INTACT: [], SOLO: []}
     for element in element_list:
         try:
             status_dict[element.status].append(element)
@@ -14,41 +17,29 @@ def seperateTypes(element_list):
 
     return status_dict
 
+
 def getRandomElements(elements, fam):
-    #selects 10 random elements of the family to make fasta file of
-    #list is passed to createConsensusFile
-    #elements should be of one family
+    # selects 10 random elements of the family to make fasta file of
+    # list is passed to createConsensusFile
+    # elements should be of one family
     rand_elements = []
-    for i in range(0,11):
-        rand = random.randint(0,len(elements)-1)
+    for i in range(0, 11):
+        rand = random.randint(0, len(elements)-1)
         rand_elements.append(elements[rand])
 
     return rand_elements
 
+
 def clustalize(rep_elements):
-    #takes in rep elements of a single type not whole family
-    #makes the temp fasta input file and does the good good
-
-    #command for formatting
-    #clustalo -i AllGMR30.fna -o testCon.fna -v -t DNA --force --outfmt clu
-    #need to use em_cons to convert into an actual consensus sequence 
-
-    status = element_list[0].status #all elements should be of same status
-    input_name = '{}_{}_repElements.fasta'.format(fam,status)
-    output_name = '{}_{}_consensus.fasta'.format(fam,status)
-
-    with open(input_name, 'w') as fasta:
-        for element in rep_elements:
-            fasta.write(element.toStringFasta())
-
-    clustal_command = 'clustalo -i {} -o {} -v'.format(input_name,output_name)
-
-    subprocess.call(clustal_command)
-    #subprocess.call('rm input_name')
+    # take in elements as fasta file
+    output_name = 'current_clustal.fna'
+    clustal_command = 'clustalo -i {} -o {} -v'.format(rep_elements, output_name)
+    os.system(clustal_command)
+    # subprocess.call('rm input_name')
 
 
 def makeFamConsensus(element_list):
-    #runs other clustal methods to create family solo and intact consensuses
+    # runs other clustal methods to create family solo and intact consensuses
     INTACT = 'INTACT'
     SOLO = 'SOLO'
 
