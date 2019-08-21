@@ -3,7 +3,8 @@ import subprocess
 from multiprocessing import Pool
 import os
 
-TEMPLATE_CMD = 'remap.py -i {} -s {} -l {} -k {} -a {} -o {} -name {} -c {} -p {} -m {} -e {}'
+TEMPLATE_CMD = 'python3 Transposer/remap.py -i {} -s {} -l {} -k {} -a {} -o {} -name {} -c {} -p {} -m {} -e {}'
+
 
 def get_path(dir):
     '''
@@ -12,6 +13,7 @@ def get_path(dir):
     the file passed in using os.path.join.
     '''
     return '/'.join(dir.split('/')[1:-1])
+
 
 def linker(old_element_file):
     consensus = 'consensus'
@@ -56,7 +58,9 @@ def make_match_dict(consensus_dir, old_elements_dir):
     return match_dict
 
 
-def get_processes():
+def get_processes(bowtie_index,cur_BDB, old_BDB, cur_acc, old_acc, output,
+                  old_elements, allowance=150, LTR_con=None, solo_con=None):
+    # calculate name from the filename given
     '''
     Returns a tuple of all process to be run by formating the TEMPLATE_CMD
     constant. Will need to make sure it can run with only one consensus.
