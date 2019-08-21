@@ -47,22 +47,46 @@ def make_match_dict(consensus_dir, old_elements_dir):
         # the dictionary can be more easily be used for creating the list
         # of process commands to run
         key = os.path.join(old_el_path, old_el)
-        match_dict[key] = []
+        match_dict[key] = [None, None]
         solo, intact = linker(old_el)
 
         if solo in con_files_set:
-            match_dict[key].append(os.path.join(con_path, solo))
+            match_dict[key][0] = (os.path.join(con_path, solo))
         if intact in con_files_set:
-            match_dict[key].append(os.path.join(con_path, intact))
+            match_dict[key][1] = (os.path.join(con_path, intact))
+        # Solo element will always be at i 0 and intact will be at i 1
+        # no matter if one or both are present for that family
 
     return match_dict
 
 
-def get_processes(bowtie_index,cur_BDB, old_BDB, cur_acc, old_acc, output,
-                  old_elements, allowance=150, LTR_con=None, solo_con=None):
+def get_processes(match_dict, old_acc, cur_acc, bowtie_index, output, cur_BDB, old_BDB):
+    commands = []
+    for file in match_dict:  # file is old elements paths
+        # when passing the con arguments if only one is in the list need to
+        # determine which it is and pass it to the correct arguement
+        solo_con, intact_con = tuple(match_dict[file])
+        commands.append(format_cmd(bowtie_index,
+                                   cur_BDB,
+                                   old_BDB,
+                                   cur_acc,
+                                   old_acc,
+                                   output,
+                                   file,
+                                   intact_con,
+                                   solo_con))
+    return commands
+
+
+def format_cmd(bowtie_index, cur_BDB, old_BDB, cur_acc, old_acc, output,
+               old_elements, allowance=150, intact_con=None, solo_con=None):
     # calculate name from the filename given
+    # processes should be ready to be run by subprocess i.e as list
+    # to run as loop old elements need to be dir a
     '''
     Returns a tuple of all process to be run by formating the TEMPLATE_CMD
     constant. Will need to make sure it can run with only one consensus.
     '''
-    pass
+    name = old_elements.split('.')[0]
+    return TEMPLATE_CMD.format(bowtie_index, solo_con, intact_con, cur_acc,
+                               output, name, cur_BDB, old_BDB, old_acc)

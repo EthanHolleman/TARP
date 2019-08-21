@@ -6,8 +6,8 @@ def argsRemap():
     ### TODO: add parameter and control structure to do create index
     parser = argparse.ArgumentParser()
     parser.add_argument("-index", "-i", help = "Set Bowtie index to be used")
-    parser.add_argument("-LTRcon","-l",help = "LTR consensus sequence")
-    parser.add_argument("-seqCon", "-s",help = "Complete element consensus")
+    parser.add_argument("-LTRcon","-l", defualt=None, help = "LTR consensus sequence")
+    parser.add_argument("-seqCon", "-s",defualt=None, help = "Complete element consensus")
     parser.add_argument("-allowance", "-a", type = int,
     help = "Number base pair variance in LTR map", nargs='?',const=150)
     parser.add_argument("-name", "-n", help = "Name of element family")
@@ -24,12 +24,6 @@ def argsRemap():
 
     if not args.index:
         print("Need index")
-        sys.exit()
-    if not args.LTRcon:
-        print("Please supply LTR consensus sequence")
-        sys.exit()
-    if not args.seqCon:
-        print("Please provide an element consensus sequence")
         sys.exit()
     if not args.chrKeys:
         print("Please provide a file of keys for chromosomes")
