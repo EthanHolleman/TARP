@@ -2,7 +2,8 @@ import sys
 import os
 import subprocess
 import re
-from element import Element
+
+from Transposer.element import Element
 
 
 def readPreviousElements(allignFile, accNums):
@@ -64,13 +65,13 @@ def getElementSeq(blastdb, element):
     reads list element objects, and gets sequences using blastdb
     output usually passed to createAllignmentList
     '''
-
     seqCommand = "blastdbcmd -db {} -dbtype nucl -range {}-{} -entry {}".format(blastdb,
                                                                                 element.startLocation,
                                                                                 element.endLocation,
                                                                                 element.accession)  # name is the current entry
 
-    seq = "".join(((str(subprocess.check_output(seqCommand, shell=True))).split("\\n"))[1:])
+    seq = "".join(
+        ((str(subprocess.check_output(seqCommand, shell=True))).split("\\n"))[1:])
     re.sub('[^0-9]', '', seq)
 
     return seq
@@ -103,7 +104,8 @@ def backMapElements(prevElements, curElements, prevBlastDB, curBlastDB, prevAcc,
     accTranslate = {}
     matchDict = {}
 
-    for cur, prev in zip(getAccNumbersFromTxt(curAcc), getAccNumbersFromTxt(prevAcc)):  # building dictionary
+    # building dictionary
+    for cur, prev in zip(getAccNumbersFromTxt(curAcc), getAccNumbersFromTxt(prevAcc)):
         accTranslate[cur] = prev
 
     for element in prevElements:
@@ -220,7 +222,9 @@ def matchsToTxt(matchDict):
             match.write(key.name + "\t" + prev.name + "\n")
             match.write(key.accession + "\t" + prev.accession + "\n")
             match.write(key.status + "\t" + prev.status + "\n")
-            match.write(str(key.startLocation) + "\t" + str(prev.startLocation) + "\n")
-            match.write(str(key.endLocation) + "\t" + str(prev.endLocation) + "\n")
+            match.write(str(key.startLocation) + "\t" +
+                        str(prev.startLocation) + "\n")
+            match.write(str(key.endLocation) + "\t" +
+                        str(prev.endLocation) + "\n")
             match.write(str(key.length) + "\t" + str(prev.length) + "\n\n")
         match.write(str(counter) + " total matches")

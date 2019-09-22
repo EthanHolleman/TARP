@@ -15,3 +15,5 @@ def set_args():
     parser.add_argument('-Cur_acc', type=str, help='Path to accession file for current assembly')
 
     return parser
+
+# confiles can be made with one consensus to rule them all from fasta tools

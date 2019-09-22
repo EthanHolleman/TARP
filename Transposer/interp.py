@@ -1,9 +1,14 @@
-import os, time, subprocess
-from element import Element
-from flanker import *
+import os
+import time
+import subprocess
+
+from Transposer.element import Element
+from Transposer.flanker import *
 
 
 def toSortedBam(samFile, verbose):
+    # # TODO: figure out if actually need this one
+    # might be good to use for verify consensus methods
     '''
     reads sam file and converts to a sorted bam
     then removes redundant files
@@ -16,7 +21,8 @@ def toSortedBam(samFile, verbose):
         bam = samFile.replace(".sam", ".bam")
         sortedBam = samFile.replace(".sam", ".sorted.bam")
 
-        commandBam = "samtools view -S -b {} > {}".format(samFile, bam) #commands to be executed
+        # commands to be executed
+        commandBam = "samtools view -S -b {} > {}".format(samFile, bam)
         commandSort = "samtools sort {} -o {}".format(bam, sortedBam)
 
         if verbose:
@@ -68,29 +74,37 @@ def createAllignmentList(bamToTxtFile, dict, verbose, curBlastDB):
 
             for line in txt:
                 line = line.split("\t")  # splits each line into a list
+                print(line)
                 name = line[2]
                 start = line[3]
                 length = line[5]  # gives cigar to the length as a temp holder
 
-                elementList.append(Element(name, name, start, 0, length, "NONE", "ATGC"))
+                elementList.append(
+                    Element(name, name, start, 0, length, "NONE", "ATGC"))
 
         for element in elementList:
+            print(element.name)
+            print(element.accession)
+            print('--------------------------')
             element.length = cigarParser(element.length)
-            element.endLocation = element.startLocation + element.length -1  # changed calculation of length using CIGAR
+            element.endLocation = element.startLocation + element.length - \
+                1  # changed calculation of length using CIGAR
             element.status = "INTACT"  # defualt status is INTACT
             element.seq = getElementSeq(curBlastDB, element)
 
             # to get the element sequence need a blast DB of the new assembly and assencion number
 
             try:
-                element.name = dict[element.name]   # uses provided dictionary to set name to chr number
+                # uses provided dictionary to set name to chr number
+                element.name = dict[element.name]
 
             except KeyError:
                 if verbose:
                     print("keyError at createAllignmentList")
                     print("key used was " + element.name)
 
-        os.system("rm {}".format(bamToTxtFile))  # removes txt version as no longer used
+        # removes txt version as no longer used
+        os.system("rm {}".format(bamToTxtFile))
 
         return elementList
 
@@ -124,7 +138,7 @@ def mergeLists(soloList, conList, familyName):
     renames elements based on new relative positions
     and returns as a list of Elements
     '''
-
+    # possible check for None type for either list
     merge = soloList + conList
     mergeDict = {}
     finalList = []
@@ -163,28 +177,28 @@ def findSolos(LTRList, completeCon, allowance):
     while i < len(LTRList):
 
         reach = LTRList[i].endLocation + completeConLength
-        diff = (LTRList[i+1].startLocation - reach)
+        diff = (LTRList[i + 1].startLocation - reach)
 
         if(diff > -(completeConLength) and diff <= 0):  # test for truncated element
             LTRList[i].status = "INTACT"
-            LTRList[i+1].status = "INTACT"
+            LTRList[i + 1].status = "INTACT"
             i += 1
-            if i == len(LTRList)-1:
+            if i == len(LTRList) - 1:
                 break
 
         elif (abs(diff) > allowance):
             LTRList[i].status = "SOLO"
             soloList.append(LTRList[i])
-            if i == len(LTRList)-2:
-                soloList.append(LTRList[i+1])
+            if i == len(LTRList) - 2:
+                soloList.append(LTRList[i + 1])
                 break
         else:
             LTRList[i].status = "INTACT"
-            LTRList[i+1].status = "INTACT"
-            i+=1
-            if i == len(LTRList)-1:
+            LTRList[i + 1].status = "INTACT"
+            i += 1
+            if i == len(LTRList) - 1:
                 break
-        i+=1
+        i += 1
 
     return soloList
 

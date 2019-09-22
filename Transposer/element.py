@@ -18,11 +18,3 @@ class Element:
                                            self.length,
                                            self.status,
                                            "\n" + self.seq)
-
-    def __eq__(self, other):
-        if self.name == other.name
-        and self.accession == other.accession
-        and self.status == other.status:
-            return True
-        else:
-            return False

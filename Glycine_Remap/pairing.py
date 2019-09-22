@@ -4,7 +4,8 @@ from multiprocessing import Pool
 import os
 
 TEMPLATE_CMD = 'python3 Transposer/remap.py -i {} -s {} -l {} -k {} -a {} -o {} -name {} -c {} -p {} -m {} -e {}'
-
+# # TODO: Transposer will not be called with subprocess and instead will
+        # be a submodule so will only be a funciton call
 
 def get_path(dir):
     '''
@@ -66,27 +67,22 @@ def get_processes(match_dict, old_acc, cur_acc, bowtie_index, output, cur_BDB, o
         # when passing the con arguments if only one is in the list need to
         # determine which it is and pass it to the correct arguement
         solo_con, intact_con = tuple(match_dict[file])
-        commands.append(format_cmd(bowtie_index,
-                                   cur_BDB,
-                                   old_BDB,
-                                   cur_acc,
-                                   old_acc,
-                                   output,
-                                   file,
-                                   intact_con,
-                                   solo_con))
+        commands.append(package_args(bowtie_index, cur_BDB, old_BDB, cur_acc,
+                        old_acc, output, file, intact_con=intact_con,
+                        solo_con=solo_con))
     return commands
 
 
-def format_cmd(bowtie_index, cur_BDB, old_BDB, cur_acc, old_acc, output,
-               old_elements, allowance=150, intact_con=None, solo_con=None):
-    # calculate name from the filename given
-    # processes should be ready to be run by subprocess i.e as list
-    # to run as loop old elements need to be dir a
+def package_args(bowtie_index, cur_BDB, old_BDB, cur_acc, old_acc, output,
+               old_elements, allowance=150, intact_con=None, solo_con=None,
+               verbose=False):
+               # defualt args are given here so when packaged all args needed
+               # will have a value when passed into the remap functionality
+               # intended to reduce issues with using starmap
     '''
     Returns a tuple of all process to be run by formating the TEMPLATE_CMD
     constant. Will need to make sure it can run with only one consensus.
     '''
     name = old_elements.split('.')[0]
-    return TEMPLATE_CMD.format(bowtie_index, solo_con, intact_con, cur_acc,
-                               output, name, cur_BDB, old_BDB, old_acc)
+    return tuple[bowtie_index, solo_con, intact_con, cur_acc, output, name,
+                 cur_BDB, old_BDB, old_acc, old_elements, allowance, verbose]
