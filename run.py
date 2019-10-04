@@ -5,20 +5,56 @@ from Transposer.search import Search
 from par.multi_process import run_pool
 from Clustering.ClstrFile import ClstrFile
 from Transposer.blast_BD import Blast_DB
+from Clustering.big_hit import run_cd_hit
+
+
+def make_clstr(fasta, clstr_dir):
+    clstr_file_name = make_clstr_name(fasta, clstr_dir)
+    print(fasta, clstr_file_name + '.clstr')
+    run_cd_hit(clstr_file_name, fasta)
+    return clstr_file_name + '.clstr'
+
+
+def make_clstr_name(path, clstr_dir):
+    base = os.path.basename(path).split('.')[0]
+    return os.path.join(clstr_dir, base)
+
+
+def make_dirs(output, run_name):
+    '''
+    Create a run dir to store all files and then three dirs within it for
+    cluster files, sam files and result files. Set the write_dirs variable
+    to a list of the three low level dirs.
+    '''
+    run_dir = os.path.join(output, run_name)
+    if os.path.isdir(run_dir) is False:
+        os.mkdir(run_dir)
+    clstr_dir = os.path.join(run_dir, 'Clusters')
+    sam_dir = os.path.join(run_dir, 'Sam_Files')
+    data_dir = os.path.join(run_dir, 'Results')
+    write_dirs = [clstr_dir, sam_dir, data_dir]
+    for dir in write_dirs:
+        if os.path.isdir(dir) is False:
+            os.mkdir(dir)
+
+    return tuple(write_dirs)
 
 
 class Run():
 
     def __init__(self, cur_BDB, cur_acc, old_BDB, old_acc, BTI, cie, run_name, output, csi=None):
+        self.write_dirs = make_dirs(output, run_name)
         self.old_BDB = Blast_DB(old_BDB, old_acc)
         self.cur_BDB = Blast_DB(cur_BDB, cur_acc)
         self.BTI = BTI  # path to bowtie index
         self.cie = cie  # path to file
         self.csi = csi  # path to file
-        self.cie_clstrs = ClstrFile(path=cie)
+        self.cie_clstrs = ClstrFile(
+            path=make_clstr(self.cie, self.write_dirs[0]))
         self.num_cie = num_cie = sum(1 for line in open(self.cie))
         if csi is not None:
-            self.csi_clstrs = ClstrFile(path=csi)
+            self.csi_clstrs = ClstrFile(
+                path=make_clstr(self.csi, self.write_dirs[0]))
             self.num_csi = num_cie = sum(1 for line in open(self.csi))
         else:
             self.csi_clstrs = None
@@ -28,26 +64,9 @@ class Run():
         self.cie_cons = None
         self.csi_cons = None
         self.jobs = None
-        self.write_dirs = None
 
-    def make_dirs(self):
-        '''
-        Create a run dir to store all files and then three dirs within it for
-        cluster files, sam files and result files. Set the write_dirs variable
-        to a list of the three low level dirs.
-        '''
-        run_dir = os.path.join(self.output, self.run_name)
-        if os.isdir(run_dir) is False:
-            os.mkdir(run_dir)
-        clstr_dir = os.path.join(run_dir, 'Clusters')
-        sam_dir = os.path.join(run_dir, 'Sam_Files')
-        data_dir = os.path.join(run_dir, 'Results')
-        write_dirs = [clstr_dir, sam_dir, data_dir]
-        for dir in write_dirs:
-            if os.isdir(dir) is False:
-                os.mkdir(dir)
-
-        self.write_dirs = tuple(write_dirs)
+        for clstr in self.cie_clstrs.clusters_set:
+            print(len(clstr.elements))
 
     def make_clstr_fastas(self):
         '''
@@ -59,26 +78,11 @@ class Run():
         but a new location can be specified in the run object init.
         '''
 
-    def select_clusters(self, min_elements=10, rm=True):
-        '''
-        Iterates through cluster files and removes those with less than
-        min_elements number of elements. By defualt those with not enough
-        elements are deleted.
-        select the clusters and make consensus sequences of them in new directory
-        under the run directory. return the paths to the con self variables
-        for intact and solo respectively.
-        '''
-        space = []
-        if self.cie_clstrs is None:
-            return -1
-        elif self.csi_fastas is None:
-            space = [self.cie_fastas]
-        else:
-            space = [self.cie_fastas, self.csi_fastas]
+    def select_clusters(self, min_elements=10):
+        self.cie_clstrs.trim_clusters(min_elements)
+        if self.csi_clstrs is not None:
+            self.csi_clstrs.trim_clusters(min_elements)
 
-        for s in space:
-            files = [os.path.join(self.clstr)]
-            # check each file for lines / 2
 
     def make_jobs(self):
         '''
@@ -136,7 +140,6 @@ class Run():
 
 # temp test will be removed and made more unit test like once everything is working
 
-from run import Run
 
 cur_BDB = '/media/ethan/EH_DATA/GMAX_2.1_BDB_parsed/GM_2.1_BD'
 cur_acc = '/media/ethan/EH_DATA/GMax2.1_assembly/chr2acc.txt'

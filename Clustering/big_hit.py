@@ -17,8 +17,14 @@ def get_element_files():
     print('Found', str(len(element_list)), 'files')
     return element_list
 
-def cd_hit(hit_path, output):
-    pass
+def run_cd_hit(output, input_file):
+    cmd = ['cd-hit-est', '-i', input_file, '-o', output, '-T', '6', '-d', '0']
+    print(' '.join(cmd))
+    cmd = ' '.join(cmd)
+    try:
+        os.system(cmd)
+    except subprocess.CalledProcessError as e:
+        return e
     # cd hit for a single file
 
 def HIT_EM_WITH_IT(element_list, output):
