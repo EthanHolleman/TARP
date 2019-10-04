@@ -3,10 +3,8 @@ import subprocess
 from fasta_tools import make_consensus
 from fasta_tools import check_formating
 
-CDHIT = '/media/ethan/Vault/cdhit'
-ELEMENTS = '/media/ethan/Vault/Gypsy_Seperated'
-OUT_DIR = '/media/ethan/Vault/Cluster_Analysis'
-FILE_EXT = 'fna'
+CDHIT = './cdhit'
+FILE_EXT = 'fa'
 
 
 def get_element_files():
@@ -19,12 +17,16 @@ def get_element_files():
     print('Found', str(len(element_list)), 'files')
     return element_list
 
+def cd_hit(hit_path, output):
+    pass
+    # cd hit for a single file
 
-def HIT_EM_WITH_IT(element_list):
+def HIT_EM_WITH_IT(element_list, output):
     output_paths = []
     HIT = os.path.join(CDHIT, 'cd-hit-est')
     for family in element_list:
-        output = os.path.join(OUT_DIR, os.path.basename(family).split('.')[0] + '.clstr')
+        output = os.path.join(output, os.path.basename(
+            family).split('.')[0] + '.clstr')
         cmd = [HIT, '-i', family, '-o', output,
                '-sc', '-sf', '-T', '6', '-d', '0']
         string = ''
@@ -35,7 +37,7 @@ def HIT_EM_WITH_IT(element_list):
         # print(string)
         #subprocess.call(cmd, shell=True)
         # for some reason subprocess not working ???
-        return output
+    return output_paths
 
 
 def make_consensus_clusters(clstr_fastas, output_dir, min_elements=4):
@@ -53,7 +55,8 @@ def make_consensus_clusters(clstr_fastas, output_dir, min_elements=4):
     for con in con_canidates:
         name = '{}_consensus.fa'.format(os.path.basename(con))
         con_path = os.path.join(output_dir, name)
-        make_consensus(con, output_path=con_path, min_elements=min_elements+1)
+        make_consensus(con, output_path=con_path,
+                       min_elements=min_elements + 1)
 
 
 def make_consensus_dirs(clstr_dir, output_dir, min_elements=4):
@@ -75,4 +78,5 @@ def make_consensus_dirs(clstr_dir, output_dir, min_elements=4):
             sub_dir = os.path.join(output_dir, dir)
             if os.path.exists(sub_dir) is False:
                 os.mkdir(sub_dir)
-            make_consensus_clusters(abs_dir, sub_dir, min_elements=min_elements)
+            make_consensus_clusters(
+                abs_dir, sub_dir, min_elements=min_elements)

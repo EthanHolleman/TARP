@@ -1,5 +1,5 @@
 # FASTA FILES HEADER MUST BE UNIQUE FOR THIS TO WORK
-from element import ClstrElement
+from Clustering.element import ClstrElement
 from fasta_tools import read_as_tuples
 
 

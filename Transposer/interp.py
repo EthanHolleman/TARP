@@ -121,11 +121,10 @@ def translateName(assenstionNums):
         chrs = {}
         with open(assenstionNums) as names:
             for line in names:
-                line = line.replace("\n", "")
+                line = line.strip()
                 line = line.split("\t")
                 number, CM = line
-                chrs.update({CM: number})
-
+                chrs[CM] = number
         return chrs
 
     except FileNotFoundError:

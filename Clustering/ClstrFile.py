@@ -1,6 +1,6 @@
 import os
-from cluster import Cluster
-from element import ClstrElement
+from Clustering.cluster import Cluster
+from Clustering.element import ClstrElement
 from fasta_tools import write_from_tuple_list
 from fasta_tools import read_as_tuples
 
@@ -108,4 +108,5 @@ class ClstrFile():
             # write all elements found in dictionart to cluster fasta file
             write_from_tuple_list(write_list, file_name)
             cluster.fasta = file_name  # change fasta variable of the cluster
+            
         return path
