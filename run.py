@@ -132,4 +132,20 @@ class Run():
             else:  # used for backmap
                 job.search_BTI(self.old_BDB, self.old_acc)
         # this gives you a bunch of sam files but now dont know which are solo
-        # and which are not done by adding intact or solo to file name above
+        # and which are not done by adding intact or solo to file name abov
+
+# temp test will be removed and made more unit test like once everything is working
+
+from run import Run
+
+cur_BDB = '/media/ethan/EH_DATA/GMAX_2.1_BDB_parsed/GM_2.1_BD'
+cur_acc = '/media/ethan/EH_DATA/GMax2.1_assembly/chr2acc.txt'
+old_acc = '/media/ethan/EH_DATA/GMax1.1_assembly/chr2acc'
+old_BDB = '/media/ethan/EH_DATA/Gmax1.0_Blast_DB/GMAX_1.0_BDB'
+BTI = '/media/ethan/EH_DATA/Gmax2.1_Bowtie/GMAX_1.1_BTI'
+cie = '/media/ethan/EH_DATA/Gypsy_Seperated/Gmr3INTACT.fna'
+csi = '/media/ethan/EH_DATA/Gypsy_Seperated/Gmr3SOLO.fna'
+
+
+a = Run(cur_BDB=cur_BDB, cur_acc=cur_acc, old_acc=old_acc, BTI=BTI, cie=cie,
+        csi=csi, run_name='TEST', output='/media/ethan/EH_DATA', old_BDB=old_BDB)
