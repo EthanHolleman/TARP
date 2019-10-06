@@ -27,6 +27,7 @@ class Blast_DB():
         '''
         search the blast db for a sequence in an entry
         '''
+
         seq_cmd = 'blastdbcmd -db {} -dbtype nucl -range {}-{} -entry {}'.format(
                    self.path, start, end, entry)
         try:

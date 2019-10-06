@@ -29,10 +29,23 @@ def process_rname(r_name):
     return r_name.split('|')[3]
 
 
+def get_chr_num(acc_path, acc):
+    try:
+        lines = []
+        with open(acc_path) as names:
+            for line in names:
+                l = line.strip().split('\t')
+            if l[1] == acc:
+                return int(l[0])
+    except FileNotFoundError as e:
+     return -1
+
+
 class Sam():
 
     def __init__(self, path, bdb, accession_path):
         self.path = path
+        self.acc_path = accession_path
         self.name = os.path.basename(path)
         self.element_set = set([])
         self.dbd = Blast_DB(bdb, accession_path)
@@ -46,12 +59,13 @@ class Sam():
                     if row[0][0] != '@':
                         name = row[0]
                         acc = process_rname(row[2])
+                        chr = get_chr_num(self.acc_path, acc)
                         start = int(row[3])  # 1 based start
                         length = cigarParser(row[5])
                         end = start + length
                         sequence = self.dbd.search(start, end, acc)
                         element_set.add(
-                            Element(name, acc, start, end, length, None, sequence))
+                            Element(name, acc, chr, start, end, length, None, sequence))
             self.element_set = element_set
             return 0
         except FileNotFoundError as e:

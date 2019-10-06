@@ -82,9 +82,13 @@ class ClstrFile():
         clusters. Although the min elements could be set to one if you wanted
         to do that.
         '''
+        select_clstrs = set([])
         for clstr in self.clusters_set:
-            if len(clstr.elements) < min_elements:
-                self.clusters_set.remove(clstr)
+            if len(clstr.elements) >= min_elements:
+                select_clstrs.add(clstr)
+
+        self.clusters_set = select_clstrs
+
 
     def write_cluster_fastas(self, original_fasta_path, path=os.getcwd(), new_dir=True):
         '''
@@ -106,12 +110,13 @@ class ClstrFile():
             #print(type(element_tuple[0].split(' ')[0]))
             search_dict[element_tuple[0].split(' ')[0]] = element_tuple
         #print(len(search_dict), 'search')
-
+        fasta_paths = []  # store the paths of written files
         for cluster in self.clusters_set:
             write_list = []  # contains elements in cluster to be written to file
             # iterate through all clusters
             file_name = os.path.join(path, '{}_cluster_{}'.format(
                 os.path.basename(cluster.parent_file.split('.')[0]), cluster.num.strip()))
+            fasta_paths.append(file_name)
             count = 0
             for clstr_element in cluster.elements:
                 if clstr_element.name in search_dict:
@@ -120,4 +125,4 @@ class ClstrFile():
             write_from_tuple_list(write_list, file_name)
             cluster.fasta = file_name  # change fasta variable of the cluster
 
-        return path
+        return fasta_paths

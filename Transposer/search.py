@@ -18,6 +18,8 @@ class Search():
     def search_BTI(self, bdb, acc_path, defualt=True, custom=None, k_fuct=1.20, preset='--very-fast'):
         defualt_cmd = ['bowtie2', '-x', self.BTI, '-f', self.con_file, '-k',
                        round(self.num_old_els * k_fuct), preset, '-S', self.out_file]
+        print(defualt_cmd)
+        print(' '.join(defualt_cmd))
         try:
             subprocess.call(defualt_cmd, shell=True)
             self.sam = Sam(path=self.out_file, bdb=bdb,

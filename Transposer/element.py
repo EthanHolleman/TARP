@@ -1,9 +1,11 @@
 
 class Element:
 
-    def __init__(self, name, accession, startLocation, endLocation, length, status, seq,):
+
+    def __init__(self, name, accession, chr, startLocation, endLocation, length, status, seq,):
         self.name = name
         self.accession = accession
+        self.chr = chr
         self.startLocation = int(startLocation)
         self.endLocation = int(endLocation)
         self.length = length
