@@ -7,23 +7,24 @@ from Transposer.sam import Sam
 
 class Search():
 
-    def __init__(self, BTI, con_file, out_file, num_old_els):
+    def __init__(self, BTI, con_file, out_file, num_old_els, type="I"):
         self.BTI = BTI
         self.sam = None
         self.con_file = con_file
         self.out_file = out_file  # path to a specific file
         self.num_old_els = num_old_els
+        self.type = type  # from a solo or intact consensus
         # old elments must be in fasta for this to be correct 1 seq per line
 
     def search_BTI(self, bdb, acc_path, defualt=True, custom=None, k_fuct=1.20, preset='--very-fast'):
         defualt_cmd = ['bowtie2', '-x', self.BTI, '-f', self.con_file, '-k',
                        round(self.num_old_els * k_fuct), preset, '-S', self.out_file]
-        print(defualt_cmd)
-        print(' '.join(defualt_cmd))
+        cmd = ' '.join([str(c) for c in defualt_cmd])
+        print(cmd, type(cmd))
         try:
-            subprocess.call(defualt_cmd, shell=True)
+            os.system(cmd)
             self.sam = Sam(path=self.out_file, bdb=bdb,
-                           accession_path=acc_path)
+                           accession_path=acc_path, type=self.type)
             return 0
         except subprocess.CalledProcessError as e:
             return e

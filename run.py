@@ -10,6 +10,7 @@ from Clustering.big_hit import run_cd_hit
 
 from fasta_tools import make_consensus
 
+
 def make_clstr(fasta, clstr_dir):
     clstr_file_name = make_clstr_name(fasta, clstr_dir)
     run_cd_hit(clstr_file_name, fasta)
@@ -50,15 +51,15 @@ class Run():
         self.BTI = BTI  # path to bowtie index
         self.cie = cie  # path to file
         self.csi = csi  # path to file
-        self.old_acc = old_acc
-        self.cur_acc = cur_acc
+        self.old_acc = old_acc  # path to acc2chr file for old assembly
+        self.cur_acc = cur_acc  # path to acc2chr file for new assembly
         self.cie_clstrs = ClstrFile(
             path=make_clstr(self.cie, self.write_dirs[0]))
-        self.num_cie = num_cie = sum(1 for line in open(self.cie))
+        self.num_cie = num_cie = sum(1 for line in open(self.cie))/2
         if csi is not None:
             self.csi_clstrs = ClstrFile(
                 path=make_clstr(self.csi, self.write_dirs[0]))
-            self.num_csi = num_cie = sum(1 for line in open(self.csi))
+            self.num_csi = num_cie = sum(1 for line in open(self.csi))/2
         else:
             self.csi_clstrs = None
             self.num_csi = 0
@@ -78,9 +79,11 @@ class Run():
         Write fasta files from the clusters. Should trim the clusters before
         calling this method pretty much always.
         '''
-        self.cie_cons = self.cie_clstrs.write_cluster_fastas(self.cie, self.write_dirs[0], new_dir=False)
+        self.cie_cons = self.cie_clstrs.write_cluster_fastas(
+            self.cie, self.write_dirs[0], new_dir=False)
         if self.csi_clstrs is not None:
-            self.csi_cons = self.csi_clstrs.write_cluster_fastas(self.csi, self.write_dirs[0], new_dir=False)
+            self.csi_cons = self.csi_clstrs.write_cluster_fastas(
+                self.csi, self.write_dirs[0], new_dir=False)
 
     def make_consensensi(self, min_elements=5, n=20):
         '''
@@ -102,7 +105,6 @@ class Run():
                 csi_cons.append(con_name)
             self.csi_cons = csi_cons
 
-
     def make_jobs(self):
         '''
         generates a list of bowtie commands to be run based on the number of
@@ -112,45 +114,35 @@ class Run():
         jobs and second list being solo jobs.
         '''
         sam_dir = self.write_dirs[1]
-        all_cons = []
         jobs = []
-        switch = -1
-
-        if self.csi is not None:  # making sure use the right previous element
-            # for each job being created
-            switch = len(self.cie) - 1
-            all_cons = self.cie_cons + self.csi_cons
-        else:
-            all_cons = self.cie_cons
-        print(all_cons, 'ALL CONS HERE')
-        print(self.csi_cons, 'CSI CONS')
-        print(self.cie_cons, 'CIE CONS')
-        for i, con in enumerate(all_cons):
-            # naming the sam file
-            sam_name = ''
-            if i == switch:
-                num_old_els = self.num_csi
-                sam_name = os.path.basename(con).split('.')[0] + '_solo.sam'
-            else:
-                num_old_els = self.num_cie
-                sam_name = os.path.basename(con).split('.')[0] + '_intact.sam'
-
+        for c in self.cie_cons:
+            print(c, 'intact')
+            sam_name = os.path.basename(c).split('.')[0] + '_intact.sam'
             sam_file = os.path.join(sam_dir, sam_name)
-            # cie will always be first paths in the list so if csi does not
-            # exist switch will never change from -1 and old element
-            # number will always be from the cie
-            jobs.append(Search(BTI=BTI, con_file=con,
-                               out_file=sam_file, num_old_els=num_old_els))
+            jobs.append(Search(BTI=BTI, con_file=c,
+                               out_file=sam_file, num_old_els=self.num_cie, type='I'))
 
+        if self.csi_cons is not None:
+            for c in self.csi_cons:
+                print(c, 'solo')
+                sam_name = os.path.basename(c).split('.')[0] + '_solo.sam'
+                sam_file = os.path.join(sam_dir, sam_name)
+                jobs.append(Search(BTI=BTI, con_file=c,
+                                   out_file=sam_file, num_old_els=self.num_csi, type='S'))
+            # need numbers of both the intact and solo files
         self.jobs = jobs  # jobs now stored in the run object
-        print(self.jobs, '\n\n\n\n\n\n\n\n\n\n')
-        print(len(self.jobs))
 
     def run_jobs(self, cur=True):
         '''
-        Runs the jobs and stores sam file objects. Probably need a way to
-        keep track of which sams are solo and which are intact.
+        Runs the jobs and stores sam file objects. using methods from sam class
+        removes duplicates and types the elements for each sam object. After this
+        the elements are ready to be placed into a final order and then written to
+        a fasta file.
         '''
+        # could just do the the removal set type thing while in this method
+        # and then end up with a set of elements that is unique and then ordered
+        # for writing to a final output
+
         sam_dir = self.write_dirs[1]  # stored at 1 index always
 
         for job in self.jobs:
@@ -158,23 +150,31 @@ class Run():
                 job.search_BTI(self.cur_BDB, self.cur_acc)
             else:  # used for backmap
                 job.search_BTI(self.old_BDB, self.old_acc)
+
+            #job.sam.type_elements()  # type elements and remove false solos
+            #job.sam.remove_dups()  # remove duplicate elements within the sams
+
         # this gives you a bunch of sam files but now dont know which are solo
         # and which are not done by adding intact or solo to file name abov
 
 # temp test will be removed and made more unit test like once everything is working
+# backmapping elements done by translating the old elements into element objects
+# if information is in the the header given then that is one way if it is not
+# then can bowtie consensus sequences back to original assembly but can work
+# on that later
 
 
 cur_BDB = '/media/ethan/EH_DATA/GMAX_2.1_BDB_parsed/GM_2.1_BD'
 cur_acc = '/media/ethan/EH_DATA/GMax2.1_assembly/chr2acc.txt'
 old_acc = '/media/ethan/EH_DATA/GMax1.1_assembly/chr2acc'
 old_BDB = '/media/ethan/EH_DATA/Gmax1.0_Blast_DB/GMAX_1.0_BDB'
-BTI = '/media/ethan/EH_DATA/Gmax2.1_Bowtie/GMAX_1.1_BTI'
+BTI = '/media/ethan/EH_DATA/GMAX_1.1_BTI/GMAX_1.1_BTI'
 cie = '/media/ethan/EH_DATA/Gypsy_Seperated/Gmr3INTACT.fna'
 csi = '/media/ethan/EH_DATA/Gypsy_Seperated/Gmr3SOLO.fna'
 
 
 a = Run(cur_BDB=cur_BDB, cur_acc=cur_acc, old_acc=old_acc, BTI=BTI, cie=cie,
-        csi=csi, run_name='TEST', output='/media/ethan/EH_DATA', old_BDB=old_BDB)
+        csi=csi, run_name='TEST_OLD_BTI', output='/media/ethan/EH_DATA', old_BDB=old_BDB)
 print(a.csi_clstrs)
 print(a.cie)
 
