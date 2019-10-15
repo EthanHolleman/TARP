@@ -1,5 +1,6 @@
 import argparse
 import sys
+import multiprocessing as mp
 
 def set_args():
     parser = argparse.ArgumentParser(description='Gylcine_Remap Args')
@@ -9,20 +10,19 @@ def set_args():
     parser.add_argument('-P', type=str, help='Path to BLAST DB created from assembly old elements are mapped to')
     parser.add_argument('-C', type=str, help='Path to BLAST DB created from most recent assembly')
     parser.add_argument('-O', type=str, help='Path where results will be written')
-    parser.add_argument('--T', type=int, defualt=mp.cpu_count(), help='Number of cores to run processes on, defualt is all')
+    parser.add_argument('-T', type=int, default=mp.cpu_count(), help='Number of cores to run processes on, default is all')
     parser.add_argument('-B', type=str, help='Bowtie index created from most recent assembly')
     parser.add_argument('-acc_o', type=str, help='Path to accession file for outdated assembly')
     parser.add_argument('-acc_c', type=str, help='Path to accession file for current assembly')
     parser.add_argument('-name', type=str, help='Name of the run, all data will be written in dir under this name')
-
+    parser.add_argument('-M', action='store_true', help='Run backmapping, default = true, set to false to prevent backmapping')
     args = parser.parse_args()
     exit = False
     if not args.I:
         print('Path to intact elements fasta file required (-I)')
         exit = True
     if not args.P or not args.C:
-        print('Please supply path to BLAST database for both current \
-        and outdated assemblies')
+        print('Please supply path to BLAST database for both current and outdated assemblies')
         exit = True
     if not args.O:
         print('Please supply output directory')
@@ -31,11 +31,13 @@ def set_args():
         print('Please supply bowtie2 index of current assembly')
         exit = True
     if not args.acc_c or not args.acc_c:
-        print('Please provide paths to the acc2chr files for the current and \
-        outdated assemblies. These can be found in the Genbank FTP folders for \
-        a given assembly.')
+        print('''Please provide paths to the acc2chr files for the current and
+        outdated assemblies. These can be found in the Genbank FTP folders for
+        a given assembly.''')
     if exit:
         sys.exit()
+    else:
+        return args
 
 
 # confiles can be made with one consensus to rule them all from fasta tools
