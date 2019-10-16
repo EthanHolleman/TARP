@@ -3,8 +3,8 @@
 # once done writing this then change to no extension so can be run with
 # just the command ./TARP parameters
 import time
-
 from args import set_args
+from args import check_depends
 from run import Run
 from Transposer.process_sams import write_fasta
 from Transposer.process_sams import sort_elements
@@ -17,6 +17,8 @@ def print_logo():
         for l in logo.readlines():
             print(str(l.strip()))
     time.sleep(2)
+
+    check_depends()
 
 
 def main():
@@ -49,8 +51,8 @@ def main():
     new_run.make_jobs()  # make bowtie jobs
     new_run.run_jobs()  # run bowtie jobs
 
-    sorted_elements = sort_sams(run.jobs)
-    write_fasta(sorted_elements, run.write_dirs[2])
+    sorted_elements = sort_sams(new_run.jobs)
+    write_fasta(sorted_elements, new_run.write_dirs[2], name=run_name)
     if backmap == True:
         pass
         # run all the backmapping stuff here

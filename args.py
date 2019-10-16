@@ -1,6 +1,21 @@
 import argparse
+import shutil
 import sys
 import multiprocessing as mp
+
+DEPENDS = './depends.txt'
+
+def check_depends():
+    dps = []
+    with open(DEPENDS) as dp:
+        dps = dp.readlines()
+    for dp in dps:
+        if shutil.which(dp) is not None:
+            print('Please install {} and rerun TARP'.format(dp))
+            sys.exit
+
+    print('All dependency checks passed\n')
+
 
 def set_args():
     parser = argparse.ArgumentParser(description='Gylcine_Remap Args')
@@ -35,6 +50,7 @@ def set_args():
         outdated assemblies. These can be found in the Genbank FTP folders for
         a given assembly.''')
     if exit:
+        print('Goodbye')
         sys.exit()
     else:
         return args
