@@ -5,7 +5,6 @@ import multiprocessing as mp
 from multiprocessing import Pool
 import tqdm
 
-from Transposer.remap import transpose
 
 def mute():
     sys.stdout = open(os.devnull, 'w')

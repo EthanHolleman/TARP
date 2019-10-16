@@ -1,10 +1,8 @@
 import os
 
-from Transposer.sam import Sam
 from Transposer.search import Search
 from par.multi_process import run_pool
 from Clustering.ClstrFile import ClstrFile
-from Transposer.blast_BD import Blast_DB
 from Clustering.big_hit import run_cd_hit
 
 
@@ -48,8 +46,8 @@ class Run():
 
     def __init__(self, cur_BDB, cur_acc, old_BDB, old_acc, BTI, cie, run_name, output, csi=None):
         self.write_dirs = make_dirs(output, run_name)
-        self.old_BDB = Blast_DB(old_BDB, old_acc)
-        self.cur_BDB = Blast_DB(cur_BDB, cur_acc)
+        self.old_BDB = old_BDB, old_acc
+        self.cur_BDB = cur_BDB, cur_acc
         self.BTI = BTI  # path to bowtie index
         self.cie = cie  # path to file
         self.csi = csi  # path to file
@@ -72,6 +70,12 @@ class Run():
         self.jobs = None
 
     def select_clusters(self, min_elements=10):
+        '''
+        Remove clusters that do not meet the min element
+        threshold. May want to calculate this differently later
+        or make so you can pass in a function that allows for
+        calculating min value.
+        '''
         self.cie_clstrs.trim_clusters(min_elements)
         if self.csi_clstrs is not None:
             self.csi_clstrs.trim_clusters(min_elements)
@@ -87,7 +91,7 @@ class Run():
             self.csi_cons = self.csi_clstrs.write_cluster_fastas(
                 self.csi, self.write_dirs[0], new_dir=False)
 
-    def make_consensensi(self, min_elements=5, n=20):
+    def make_consensensi(self, min_elements=5, n=21):
         '''
         Need a way to get the paths to the fasta files and then process
         them with clustal omega and that kind of thing. Need to store the
@@ -122,7 +126,7 @@ class Run():
             sam_file = os.path.join(sam_dir, sam_name)
             jobs.append(Search(BTI=self.BTI, con_file=c,
                                out_file=sam_file, num_old_els=self.num_cie,
-                               type='I', acc=self.cur_acc, DBD=self.cur_BDB))
+                               type='I', acc=self.cur_acc, BDB=self.cur_BDB))
         ## TODO: edit the search objects so taking in all required parameters
         if self.csi_cons is not None:
             for c in self.csi_cons:
@@ -130,7 +134,7 @@ class Run():
                 sam_file = os.path.join(sam_dir, sam_name)
                 jobs.append(Search(BTI=self.BTI, con_file=c,
                                    out_file=sam_file, num_old_els=self.num_csi,
-                                   type='S', acc=self.cur_acc, DBD=self.cur_BDB))
+                                   type='S', acc=self.cur_acc, BDB=self.cur_BDB))
             # need numbers of both the intact and solo files
         self.jobs = jobs  # jobs now stored in the run object
 
@@ -141,9 +145,6 @@ class Run():
         the elements are ready to be placed into a final order and then written to
         a fasta file.
         '''
-        # could just do the the removal set type thing while in this method
-        # and then end up with a set of elements that is unique and then ordered
-        # for writing to a final output
 
         sam_dir = self.write_dirs[1]  # stored at 1 index always
 

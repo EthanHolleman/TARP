@@ -1,6 +1,8 @@
+import os
+import itertools
 from operator import or_
 from functools import reduce
-import itertools
+
 
 from Transposer.search import sort_elements
 
@@ -45,9 +47,11 @@ def write_fasta(sorted_elements, output, name):
                 if cur_chr != el.chr:
                     cur_chr = el.chr
                     i = 1
-                header = '{} {}-{}, {}, {}'.format(el.name, cur_chr, str(i),
+                header = '>{} {}-{}, {}, {}'.format(el.name, cur_chr, str(i),
                                                    el.startLocation, el.length)
                 seq = el.seq
-                output.write(header + '\n' + seq + '\n')
+                output.write(header + '\n' + seq[:-1] + '\n')
+                i += 1
+        print('written to', fasta_name)
     except FileNotFoundError as e:
         return e
