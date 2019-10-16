@@ -1,0 +1,7 @@
+cd-hit-est
+bowtie2
+blastdbcmd
+
+# need to add consensus tools dependencies
+# add fasta_tools dependene
+# fasta_tools needs to be tested through python import
