@@ -2,6 +2,7 @@
 
 # once done writing this then change to no extension so can be run with
 # just the command ./TARP parameters
+import time
 
 from args import set_args
 from run import Run
@@ -9,10 +10,17 @@ from Transposer.process_sams import write_fasta
 from Transposer.process_sams import sort_elements
 # coult potentially include in the Run objects
 
+LOGO = './.logo.txt'
+
+def print_logo():
+    with open(LOGO) as logo:
+        for l in logo.readlines():
+            print(str(l.strip()))
+    time.sleep(2)
+
 
 def main():
     args = set_args()  # read args and assign to args
-    print(args, 'arrrg')
     intact_old = args.I
     solo_old = args.S
     BDB_old = args.P
@@ -23,6 +31,8 @@ def main():
     acc_cur = args.acc_c
     run_name = args.name
     backmap = args.M
+
+    print_logo()
 
     # assign passed arguements not really needed but done
     # to add some clarity later on
