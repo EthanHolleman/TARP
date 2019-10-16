@@ -9,6 +9,8 @@ from Clustering.big_hit import run_cd_hit
 
 
 from fasta_tools import make_consensus
+    # return the length of the sequence which will
+    # be in the second line
 
 
 def make_clstr(fasta, clstr_dir):
@@ -116,19 +118,19 @@ class Run():
         sam_dir = self.write_dirs[1]
         jobs = []
         for c in self.cie_cons:
-            print(c, 'intact')
             sam_name = os.path.basename(c).split('.')[0] + '_intact.sam'
             sam_file = os.path.join(sam_dir, sam_name)
-            jobs.append(Search(BTI=BTI, con_file=c,
-                               out_file=sam_file, num_old_els=self.num_cie, type='I'))
-
+            jobs.append(Search(BTI=self.BTI, con_file=c,
+                               out_file=sam_file, num_old_els=self.num_cie,
+                               type='I', acc=self.cur_acc, DBD=self.cur_BDB))
+        ## TODO: edit the search objects so taking in all required parameters
         if self.csi_cons is not None:
             for c in self.csi_cons:
-                print(c, 'solo')
                 sam_name = os.path.basename(c).split('.')[0] + '_solo.sam'
                 sam_file = os.path.join(sam_dir, sam_name)
-                jobs.append(Search(BTI=BTI, con_file=c,
-                                   out_file=sam_file, num_old_els=self.num_csi, type='S'))
+                jobs.append(Search(BTI=self.BTI, con_file=c,
+                                   out_file=sam_file, num_old_els=self.num_csi,
+                                   type='S', acc=self.cur_acc, DBD=self.cur_BDB))
             # need numbers of both the intact and solo files
         self.jobs = jobs  # jobs now stored in the run object
 
@@ -148,6 +150,7 @@ class Run():
         for job in self.jobs:
             if cur:  # search current databases used for remap
                 job.search_BTI(self.cur_BDB, self.cur_acc)
+                # search object will now hold the element list
             else:  # used for backmap
                 job.search_BTI(self.old_BDB, self.old_acc)
 
@@ -164,6 +167,8 @@ class Run():
 # on that later
 
 
+
+'''
 cur_BDB = '/media/ethan/EH_DATA/GMAX_2.1_BDB_parsed/GM_2.1_BD'
 cur_acc = '/media/ethan/EH_DATA/GMax2.1_assembly/chr2acc.txt'
 old_acc = '/media/ethan/EH_DATA/GMax1.1_assembly/chr2acc'
@@ -184,3 +189,4 @@ a.make_consensensi()
 a.make_jobs()
 print(a.jobs)
 a.run_jobs()
+'''

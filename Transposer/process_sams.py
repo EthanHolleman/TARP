@@ -2,11 +2,11 @@ from operator import or_
 from functools import reduce
 import itertools
 
-from Transposer.sam import sort_elements
+from Transposer.search import sort_elements
 
 # move this to the run object class since each sam is saved in the jobs attribute
 
-def sort_sams(list_sams, l):
+def sort_sams(search_list):
     '''
     Takes in run object and returns sorted list of the solo and intact element
     for that object. Sort by chromosomes and sort by position in the
@@ -18,25 +18,27 @@ def sort_sams(list_sams, l):
     and the duplicates between sams the sort and return a sorted list of
     elements which then can be written to a fasta file.
     '''
-    for s in list_sams:
-        s.remove_dups()
-        s.type_elements(l)
-    els_list = [s.element_set for s in list_sams]
+    els_list = [s.element_set for s in search_list]
+    # get all element sets from search objects
     all_els = list(itertools.chain.from_iterable(els_list))
+    # chain all lists together
     sort_els = sort_elements(all_els)
+    # sort the elements as if one large list
 
     return sort_els
 
 
-def write_fasta(sorted_elements, output):
+def write_fasta(sorted_elements, output, name):
     # sorted elements are coming in list format
     # need to write in way that works with the information in each element
     # need to figure out what name maybe just use the run name for that
     # and add to the element
     # labels elements by their position on the chromosome format is
     # name chr-position
+    fasta_name = os.path.join(output, '{}_remap.fa'.format(str(name)))
+
     try:
-        with open(output, 'w') as output:
+        with open(fasta_name, 'w') as output:
             i = 1
             cur_chr = None
             for el in sorted_elements:
