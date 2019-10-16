@@ -3,8 +3,5 @@
 *.fasta
 *.fa
 
-#ignore txt files
-*.txt
-
 #ignore .pyc files
 *.pyc
