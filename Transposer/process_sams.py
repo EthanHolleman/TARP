@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+import csv
 import os
 import itertools
 from operator import or_
@@ -7,6 +9,7 @@ from functools import reduce
 from Transposer.search import sort_elements
 
 # move this to the run object class since each sam is saved in the jobs attribute
+
 
 def sort_sams(search_list):
     '''
@@ -29,29 +32,51 @@ def sort_sams(search_list):
 
     return sort_els
 
+def prune(e, n=75):
+    '''
+    Takes a sorted list of elements and removes elements that are within
+    n number of bases (start position) from the last element. This prevents
+    similar consensus sequences from hitting elements at only few base
+    pair positional difference from making it into the final output.
+    '''
+    chunks = []
+    cur_chunk = []
+    for i in range(1, len(e)):
+        d = e[i].startLocation - e[i-1].startLocation
+        if d > n:  # no nearby elements
+            if len(cur_chunk) > 0:
+                if len(cur_chunk) >= 1:
+                    yield cur_chunk[0]
+                cur_chunk = []
+            yield e[i]
+        else:
+            cur_chunk.append(e[i])
 
-def write_fasta(sorted_elements, output, name):
-    # sorted elements are coming in list format
-    # need to write in way that works with the information in each element
-    # need to figure out what name maybe just use the run name for that
-    # and add to the element
-    # labels elements by their position on the chromosome format is
-    # name chr-position
-    fasta_name = os.path.join(output, '{}_remap.fa'.format(str(name)))
 
-    try:
-        with open(fasta_name, 'w') as output:
+def write_fasta(sorted_elements, output):
+    with open(output, 'w') as out:
+        for el in sorted_elements:
+            out.write(el.get_header() + '\n' + el.seq + '\n')
+
+
+def write_csv(sorted_elements, output):
+    with open(output, 'w') as out:
+        writer = csv.writer(out)
+        writer.writerow(['Name', 'Accession', 'Chr', 'Start', 'Length',
+                         'Seq', 'Left Flank', 'Right Flank'])
+        for el in sorted_elements:
+            writer.writerow(el.get_row())
+
+
+def rename_elements(sorted_elements):
+    sorted_elements = list(sorted_elements)  # deal with generator stuff for now
+    i = 1
+    cur_chr = None
+    for el in sorted_elements:
+        if cur_chr != el.chr:
+            cur_chr = el.chr
             i = 1
-            cur_chr = None
-            for el in sorted_elements:
-                if cur_chr != el.chr:
-                    cur_chr = el.chr
-                    i = 1
-                header = '>{} {}-{}, {}, {}'.format(el.name, cur_chr, str(i),
-                                                   el.startLocation, el.length)
-                seq = el.seq
-                output.write(header + '\n' + seq[:-1] + '\n')
-                i += 1
-        print('written to', fasta_name)
-    except FileNotFoundError as e:
-        return e
+        el.name = '{}:{}-{}'.format(el.name, cur_chr, i)
+        i += 1
+
+    return sorted_elements
