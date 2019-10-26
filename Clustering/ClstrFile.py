@@ -107,9 +107,8 @@ class ClstrFile():
                 os.mkdir(path)
 
         for element_tuple in lines:
-            #print(type(element_tuple[0].split(' ')[0]))
             search_dict[element_tuple[0].split(' ')[0]] = element_tuple
-        #print(len(search_dict), 'search')
+
         fasta_paths = []  # store the paths of written files
         for cluster in self.clusters_set:
             write_list = []  # contains elements in cluster to be written to file
@@ -126,3 +125,12 @@ class ClstrFile():
             cluster.fasta = file_name  # change fasta variable of the cluster
 
         return fasta_paths
+
+    def get_singles(self):
+        '''
+        Returns elements from clusters that contain only one element. If clsuter
+        contains > 1 element selects an element and returns it. For use with
+        pruning similar conensus sequences.
+        '''
+        for c in self.clusters_set:
+            yield c.elements.pop().name
