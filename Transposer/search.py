@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import subprocess
 import os
 import csv
@@ -5,15 +6,9 @@ import csv
 from Transposer.element import Element
 from fasta_tools import check_formating
 
-
-def get_intact_length(con_file_path):
-    check_formating(con_file_path)
-    length = []
-    with open(con_file_path) as con:
-        length = con.readlines()
-
-    return len(length[1])
-
+# each search object needs to include or need somekind of way for it
+# to access the intact consensus file when the solo elements are
+# being processed
 
 def cigarParser(cigar):
     '''
@@ -56,7 +51,6 @@ def make_acc_dict(acc_path):
         for line in names:
             l = line.strip().split('\t')
             acc_dict[l[1]] = l[0]
-    print(acc_dict)
     return acc_dict
 
 
@@ -75,6 +69,35 @@ def sort_elements(elements):
     return sorted_list
 
 
+def search_BDB(BDB, start, end, entry, r_seq=True):
+    '''
+    search the blast db for a sequence in an entry
+    '''
+    cmd = ['blastdbcmd', '-db', BDB, '-dbtype', 'nucl', '-range', str(start) + '-' + str(end), '-entry', entry]
+    cmd = ' '.join(cmd)
+    print(cmd)
+    try:
+        output = subprocess.check_output(cmd, shell=True)
+    except subprocess.CalledProcessError as e:
+        return ''
+    if r_seq:
+        return ''.join(str(output).split('\\n')[1:])
+        # returns string of just the sequence
+    else:
+        return output  # else return all output
+
+
+def get_seq_flanks(start, end, entry, BDB, flank_len):
+    '''
+    Uses search BDB to get the sequence and right and left flanks.
+    Returns as a tuple (seq, left, right)
+    '''
+    sequence = self.search_BDB(BDB, start-flank_len, end+flank_len, entry)
+    left, right = sequence[:flank_len], sequence[end:]
+    sequence = sequence[flank_len:-flank_len]
+    return tuple([sequence, left, right])
+
+
 class Search():
     '''
     # TODO: going to need to pass the BDB to the search objects now
@@ -82,13 +105,13 @@ class Search():
     going to need the the accession files
     '''
 
-    def __init__(self, BTI, con_file, out_file, num_old_els, acc, BDB, type="I"):
+    def __init__(self, BTI, con_file, out_file, num_old_els, acc, BDB, intact_len, type="I"):
         self.BTI = BTI
         self.BDB = BDB
         self.acc = acc
         self.acc_dict = make_acc_dict(acc)
         self.con_file = con_file
-        self.intact_len = get_intact_length(con_file)
+        self.intact_len = intact_len
         # Con file length needs to be the length of the
         # intact element always even if the type is solo
         self.out_file = out_file  # path to a specific file
@@ -113,7 +136,7 @@ class Search():
 
         self.element_set = nr_list
 
-    def type_elements(self, len_intact, allowance=25):
+    def type_elements(self, allowance=25):
         '''
         If Sam is solo type then sort solo elements and remove those that are
         actually the ends of an LTR. If sam is an intact type then change the
@@ -131,7 +154,7 @@ class Search():
                 if current.chr != next.chr:
                     solo_set.add(current)
                     i += 1
-                elif next.startLocation - len_intact - allowance <= current.endLocation:
+                elif next.startLocation - self.intact_len + allowance <= current.endLocation:
                     # elements are close enough to be intact
                     i += 2
                 else:
@@ -151,11 +174,11 @@ class Search():
         '''
         search the blast db for a sequence in an entry
         '''
-
-        seq_cmd = 'blastdbcmd -db {} -dbtype nucl -range {}-{} -entry {}'.format(
-            self.BDB, start, end, entry)
+        cmd = ['blastdbcmd', '-db', self.BDB, '-dbtype', 'nucl', '-range', str(start) + '-' + str(end), '-entry', entry]
+        cmd = ' '.join(cmd)
+        print(cmd)
         try:
-            output = subprocess.check_output(seq_cmd, shell=True)
+            output = subprocess.check_output(cmd, shell=True)
         except subprocess.CalledProcessError as e:
             return ''
         if r_seq:
@@ -164,38 +187,48 @@ class Search():
         else:
             return output  # else return all output
 
+    # need to put get seq and flanks in a more general position so that
+    # the old elements can use it
+
     def make_element_set(self):
+        flank_len = 20
         try:
             element_set = set([])
             with open(self.out_file) as path:
                 reader = csv.reader(path, delimiter='\t')
-                for row in reader:
+                for i,row in enumerate(reader):
                     if row[0][0] != '@':
                         name = row[0]
                         acc = row[2]
+                        if row[2] == '*':
+                            continue
                         chr = self.acc_dict[str(acc)]
                         start = int(row[3])  # 1 based start
                         length = cigarParser(row[5])
                         end = start + length
-                        sequence = self.search_BDB(start, end, acc)
-                        print(start)
+                        sequence = self.search_BDB(start-flank_len, end+flank_len, acc)
+                        left, right = sequence[:flank_len], sequence[end:]
+                        sequence = sequence[flank_len:-flank_len]
+                        # get flanking sequences for backmapping to avoid additional searches
                         element_set.add(
-                            Element(name, acc, chr, start, end, length, type, sequence))
+                            Element(name, acc, chr, start, end, length, type, sequence, left, right))
 
             self.element_set = element_set
             self.remove_dups()
-            self.type_elements(self.intact_len)
+            self.type_elements()
 
             return 0
         except FileNotFoundError as e:
             return set([])
 
-    def search_BTI(self, bdb, acc_path, defualt=True, custom=None, k_fuct=1.20, preset='--very-fast'):
+
+    def search_BTI(self, bdb, acc_path, defualt=True, custom=None, k_fuct=1.2, preset='--sensitive', threads=8):
         defualt_cmd = ['bowtie2', '-x', self.BTI, '-f', self.con_file, '-k',
-                       round(self.num_old_els * k_fuct), preset, '-S', self.out_file]
-        cmd = ' '.join([str(c) for c in defualt_cmd])
+                       round(self.num_old_els * k_fuct), preset, '-S', self.out_file, '--n-ceil', 'L,0,0.20.']
+        cmd = [str(c) for c in defualt_cmd]
         try:
-            os.system(cmd)
+            FNULL = open(os.devnull, 'w')
+            retcode = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
             self.make_element_set()
 
         except subprocess.CalledProcessError as e:
