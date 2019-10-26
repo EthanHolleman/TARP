@@ -2,6 +2,7 @@ import os
 import subprocess
 from fasta_tools import make_consensus
 from fasta_tools import check_formating
+from progress.spinner import Spinner
 
 CDHIT = './cdhit'
 FILE_EXT = 'fa'
@@ -19,10 +20,13 @@ def get_element_files():
 
 def run_cd_hit(output, input_file):
     cmd = ['cd-hit-est', '-i', input_file, '-o', output, '-T', '6', '-d', '0']
-    print(' '.join(cmd))
-    cmd = ' '.join(cmd)
+    #cmd = ' '.join(cmd)
+    #cmd = cmd + ' &> /dev/null'
+    #print(cmd)
+    FNULL = open(os.devnull, 'w')
     try:
-        os.system(cmd)
+        hit = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+        #os.system(cmd)
     except subprocess.CalledProcessError as e:
         return e
     # cd hit for a single file
@@ -38,7 +42,7 @@ def HIT_EM_WITH_IT(element_list, output):
         string = ''
         for letter in cmd:
             string += str(letter + ' ')
-        os.system(string)
+        os.system(string + '&> /dev/null')
         output_paths.append(output)
         # print(string)
         #subprocess.call(cmd, shell=True)
