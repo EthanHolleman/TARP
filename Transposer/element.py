@@ -18,8 +18,8 @@ class Element:
         '''
         Returns formated header for writing to fasta files.
         '''
-        return '>{} {}: {}, {}'.format(el.name, el.status,
-                                       el.startLocation, el.length)
+        return '>{} {}: {}, {}'.format(self.name, self.status,
+                                       self.startLocation, self.length)
 
     def get_row(self):
         '''
