@@ -1,4 +1,94 @@
 
+def write_fasta(sels, output):
+    with open(output, 'w') as out:
+        for el in sels:
+            print(el.status, 'type at write')
+            out.write(el.get_header() + '\n' + el.seq + '\n')
+
+
+def write_csv(sels, output):
+    with open(output, 'w') as out:
+        writer = csv.writer(out)
+        writer.writerow(['Name', 'Accession', 'Chr', 'Start', 'Length',
+                         'Seq', 'Left Flank', 'Right Flank'])
+        for el in sels:
+            writer.writerow(el.get_row())
+
+
+
+def make_jobs(self):
+    '''
+    generates a list of bowtie commands to be run based on the number of
+    consensus clusters in the run object. Each consensus cluster will be
+    bowtied and then needs to tripped of duplicate elements. Solo and intact
+    will need to be seperated. Will be a list with first list being intact
+    jobs and second list being solo jobs. Moved after created make jobs two.
+    '''
+    sam_dir = self.write_dirs[1]
+    jobs = []
+    ave_len = 0
+    for c in self.cie_cons:
+        sam_name = os.path.basename(c).split('.')[0] + '_intact.sam'
+        sam_file = os.path.join(sam_dir, sam_name)
+        l = get_intact_length(c)
+        # redundancy here think about a way to reduceonly matches the parent
+        # dont reall need to calculate for the intact elements
+        jobs.append(Search(BTI=self.BTI, con_file=c,
+                           out_file=sam_file, num_old_els=self.num_cie,
+                           type='I', acc=self.cur_acc, BDB=self.cur_BDB,
+                           intact_len=l))
+        ave_len += l
+    ave_len = round(ave_len / len(self.cie_cons))
+    # TODO: edit the search objects so taking in all required parameters
+    # calculate average length of all consensuses and use that for
+    # calculating solo elements need to round to whole number
+    if self.csi_cons is not None:
+        for c in self.csi_cons:
+            sam_name = os.path.basename(c).split('.')[0] + '_solo.sam'
+            sam_file = os.path.join(sam_dir, sam_name)
+            jobs.append(Search(BTI=self.BTI, con_file=c,
+                               out_file=sam_file, num_old_els=self.num_csi,
+                               type='S', acc=self.cur_acc, BDB=self.cur_BDB,
+                               intact_len=ave_len))
+        # need numbers of both the intact and solo files
+    self.jobs = jobs  # jobs now stored in the run object
+
+
+
+def prune_clstr_cons(self):
+    cat_cie = os.path.join(self.write_dirs[0], 'intact_cons')
+    cie_clstr = os.path.join(self.write_dirs[0], 'in_con_clstr')
+    cat_csi = os.path.join(self.write_dirs[0], 'solo_cons')
+    csi_clstr = os.path.join(self.write_dirs[0], 'solo_con_clstr')
+    # make file names for concat consensus files
+
+    c = ['cat']
+    try:
+        # make concat files of all consensuses
+        cmd_cie = c + self.cie_cons + ['>', cat_cie]
+        cmd_csi = c + self.cie_cons + ['>', cat_csi]
+        os.system(' '.join(cmd_cie))
+        os.system(' '.join(cmd_csi))
+    except subprocess.CalledProcessError as e:
+        return 1
+        print('++++++++++ subprocess con cat error!!!')
+    print(cat_cie)
+    run_cd_hit(output=cie_clstr, input_file=cat_cie + '.clstr')
+    run_cd_hit(output=csi_clstr, input_file=cat_csi + '.clstr')
+    # get lists of single consensus clusters
+    # need to actualy make the cluster then call
+    # clstr file on the cluster file not just the fasta
+    # last error was becasue never rand cd hit
+    print(cie_clstr)
+    cie_con_files = ClstrFile(cie_clstr + '.clstr').get_singles()
+    csi_con_files = ClstrFile(csi_clstr + '.clstr').get_singles()
+    # change con variables to reflect the clustering results
+    # remove the first character as it will be a > due to writing
+    # the clstr file
+    self.cie_cons = [os.path.join(self.write_dirs[0], x[1:]) for x in cie_con_files]
+    self.csi_cons = [os.path.join(self.write_dirs[0], x[1:]) for x in csi_con_files]
+
+
 def search(con, index, outputFile, verbose=False):
     '''
     uses a consensus sequence and bowtie2 index to preform a global allignment
