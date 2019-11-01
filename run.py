@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-
 import os
+import subprocess
+
 from progress.bar import Bar
 from progress.bar import ChargingBar
 
@@ -85,7 +86,7 @@ class Run():
         self.csi_cons = None
         self.jobs = None
 
-    def select_clusters(self, min_elements=self.min_els):
+    def select_clusters(self, min_elements=3):
         '''
         Remove clusters that do not meet the min element
         threshold. May want to calculate this differently later
@@ -95,31 +96,6 @@ class Run():
         self.cie_clstrs.trim_clusters(min_elements)
         if self.csi_clstrs is not None:
             self.csi_clstrs.trim_clusters(min_elements)
-
-    def prune_clstr_cons(self, sim=0.95):
-        cat_cie = os.path.join(self.write_dirs[0], 'intact_cons.fa')
-        cie_clstr = os.path.join(self.write_dirs[0], 'in_con_clstr')
-        cat_csi = os.path.join(self.write_dirs[0], 'solo_cons.fa')
-        csi_clstr = os.path.join(self.write_dirs[0], 'solo_con_clstr')
-        # make file names for concat consensus files
-
-        c = ['cat']
-        try:
-            # make concat files of all consensuses
-            cmd_cie = c + self.cie_cons +['>', cat_cie]
-            cmd_csi = c + self.cie_cons + ['>', cat_csi]
-            subprocess.call(cmd_cie, shell=True)
-            subprocess.call(cmd_csi, shell=True)
-        except subprocess.CalledProcessError as e:
-            return 1
-        # get lists of single consensus clusters
-        cie_con_files = ClstrFile(cat_cie).get_singles()
-        csi_con_files = ClstrFile(cat_csi).get_singles()
-        # change con variables to reflect the clustering results
-        # remove the first character as it will be a > due to writing
-        # the clstr file
-        self.cie_cons = [os.path.join(self.write_dirs[0], cie_con_files[1:])]
-        self.csi_cons = [os.path.join(self.write_dirs[0], csi_con_files[1:])]
 
 
     def make_clstr_fastas(self):
@@ -133,6 +109,23 @@ class Run():
             self.csi_cons = self.csi_clstrs.write_cluster_fastas(
                 self.csi, self.write_dirs[0], new_dir=False)
 
+    def make_consensensi_teo(self, min_elements=2, n =21):
+        bar = Bar('Making intact consensuses', max=len(self.cie_cons))
+        for clstr in self.cie_clstrs.clusters_set:
+            con_name = clstr.fasta + '_intact_con'
+            bar.next()
+            make_consensus(clstr.fasta, con_name, min_elements, n=n)
+            clstr.consensus = con_name
+
+        bar_2 = Bar('Making solos consensuses',
+                            max=len(self.csi_cons))
+        if self.csi_clstrs is not None:
+            for clstr in self.csi_clstrs.clusters_set:
+                con_name = clstr.fasta + '_solo_con'
+                bar_2.next()
+                make_consensus(clstr.fasta, con_name, min_elements, n=n)
+                clstr.consensus = con_name
+
     def make_consensensi(self, min_elements=2, n=21):
         '''
         Need a way to get the paths to the fasta files and then process
@@ -141,7 +134,7 @@ class Run():
         '''
         # reduce output here
         cie_cons, csi_cons = [], []
-        bar = ChargingBar('Making intact consensuses', max=len(self.cie_cons))
+        bar = Bar('Making intact consensuses', max=len(self.cie_cons))
         for fasta in self.cie_cons:
             bar.next()
             con_name = fasta + '_intact_con'
@@ -160,52 +153,30 @@ class Run():
                 csi_cons.append(con_name)
             self.csi_cons = csi_cons
 
-    def prune_consensus(self):
-        '''
-        Makes a file containing all consensus sequences, clusters them at 95%
-        similarity and then if there are any clusters that contain more than
-        one consensus selects one of those to use in the actual search. This
-        will reduce overall runtime as redundant consensus sequecnes will
-        not need to be bowtied.
-        '''
-        pass
 
-    def make_jobs(self):
-        '''
-        generates a list of bowtie commands to be run based on the number of
-        consensus clusters in the run object. Each consensus cluster will be
-        bowtied and then needs to tripped of duplicate elements. Solo and intact
-        will need to be seperated. Will be a list with first list being intact
-        jobs and second list being solo jobs.
-        '''
+    def make_jobs_two(self):
         sam_dir = self.write_dirs[1]
         jobs = []
         ave_len = 0
-        for c in self.cie_cons:
-            sam_name = os.path.basename(c).split('.')[0] + '_intact.sam'
+        for clstr in self.cie_clstrs.clusters_set:
+            sam_name = 'clstr_' + clstr.num + '_intact.sam'
             sam_file = os.path.join(sam_dir, sam_name)
-            l = get_intact_length(c)
-            # redundancy here think about a way to reduce
-            # dont reall need to calculate for the intact elements
-            jobs.append(Search(BTI=self.BTI, con_file=c,
-                               out_file=sam_file, num_old_els=self.num_cie,
+            l = get_intact_length(clstr.consensus)
+            jobs.append(Search(BTI=self.BTI, con_file=clstr.consensus,
+                               out_file=sam_file, num_old_els=clstr.num_elements,
                                type='I', acc=self.cur_acc, BDB=self.cur_BDB,
                                intact_len=l))
             ave_len += l
-        ave_len = round(ave_len / len(self.cie_cons))
-        # TODO: edit the search objects so taking in all required parameters
-        # calculate average length of all consensuses and use that for
-        # calculating solo elements need to round to whole number
-        if self.csi_cons is not None:
-            for c in self.csi_cons:
-                sam_name = os.path.basename(c).split('.')[0] + '_solo.sam'
-                sam_file = os.path.join(sam_dir, sam_name)
-                jobs.append(Search(BTI=self.BTI, con_file=c,
-                                   out_file=sam_file, num_old_els=self.num_csi,
-                                   type='S', acc=self.cur_acc, BDB=self.cur_BDB,
-                                   intact_len=ave_len))
-            # need numbers of both the intact and solo files
-        self.jobs = jobs  # jobs now stored in the run object
+
+        for clstr in self.csi_clstrs.clusters_set:
+            sam_name = 'clstr_' + clstr.num + '_solo.sam'
+            sam_file = os.path.join(sam_dir, sam_name)
+            jobs.append(Search(BTI=self.BTI, con_file=clstr.consensus,
+                               out_file=sam_file, num_old_els=clstr.num_elements,
+                               type='S', acc=self.cur_acc, BDB=self.cur_BDB,
+                               intact_len=ave_len))
+        self.jobs = jobs
+
 
     def run_jobs(self, threads=1):
         '''
@@ -216,13 +187,7 @@ class Run():
         '''
         sam_dir = self.write_dirs[1]  # stored at 1 index always
         for job in self.jobs:
-            job.search_BTI(self.cur_BDB, self.cur_acc)
-            # search object will now hold the element list
-            # job.sam.type_elements()  # type elements and remove false solos
-            # job.sam.remove_dups()  # remove duplicate elements within the sams
-
-        # this gives you a bunch of sam files but now dont know which are solo
-        # and which are not done by adding intact or solo to file name abov
+            job.search_BTI()
 
     def write_meta(self, run_name):
         '''
@@ -231,4 +196,3 @@ class Run():
         total run time, the command used, output directory paths etc.
         '''
         pass
-        #out = os.path.join(self.write_dirs[2], run_name + '.log')
