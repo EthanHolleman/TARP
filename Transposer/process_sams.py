@@ -5,7 +5,6 @@ import itertools
 from operator import or_
 from functools import reduce
 
-
 from Transposer.search import sort_elements
 
 # move this to the run object class since each sam is saved in the jobs attribute
@@ -52,31 +51,43 @@ def prune(e, n=75):
         else:
             cur_chunk.append(e[i])
 
-
-def write_fasta(sorted_elements, output):
-    with open(output, 'w') as out:
-        for el in sorted_elements:
-            out.write(el.get_header() + '\n' + el.seq + '\n')
-
-
-def write_csv(sorted_elements, output):
-    with open(output, 'w') as out:
-        writer = csv.writer(out)
-        writer.writerow(['Name', 'Accession', 'Chr', 'Start', 'Length',
-                         'Seq', 'Left Flank', 'Right Flank'])
-        for el in sorted_elements:
-            writer.writerow(el.get_row())
+def pruner(seq, n=75):
+    cur_chunk = []
+    i = 0
+    for i in range(0, len(seq)):
+        if i == len(seq) -1:
+            break
+        d = seq[i+1].startLocation - seq[i].startLocation
+        if d > n:
+            yield seq[i]
 
 
-def rename_elements(sorted_elements):
-    sorted_elements = list(sorted_elements)  # deal with generator stuff for now
+def write_results(sels, path):
+    fasta = path + '.fa'
+    csv_file = path + '.csv'
+    fasta, csv_file = open(fasta, 'w'), open(csv_file, 'w')
+
+    writer = csv.writer(csv_file)  # make csv writer
+    write_csv_header(writer)  # write header row
+
+    for el in sels:
+        t = el
+        fasta.write(t.get_header() + '\n' + t.seq + '\n')
+        writer.writerow(t.get_row())
+
+
+def write_csv_header(writer):
+    writer.writerow(['Name', 'Accession', 'Chr', 'Start', 'Length',
+                     'Status', 'Seq', 'Left Flank', 'Right Flank'])
+
+
+def rename_elements(sels): # deal with generator stuff for now
     i = 1
     cur_chr = None
-    for el in sorted_elements:
+    for el in sels:
         if cur_chr != el.chr:
             cur_chr = el.chr
             i = 1
         el.name = '{}:{}-{}'.format(el.name, cur_chr, i)
         i += 1
-
-    return sorted_elements
+        yield el
