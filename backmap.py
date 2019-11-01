@@ -3,6 +3,36 @@
 import csv
 from Transposer.element import Element
 from Transposer.search import get_seq_flanks
+from Transposer.search import search_BDB
+
+
+# need to think about the case you have a scaffold and therefore
+# you dont know which chromosome is will be on so the sequences wont work
+# for this one so needs to be another method to return these elements
+# as well
+# for these could do a hamming distance seq comparison and see if find any
+# matches
+
+def make_soy_elements(csv_path, delim='\t'):
+    '''
+    Reads in a tab delim by defualt file that contains element descriptions
+    in the soybase format and converts entries to element objects.
+    '''
+    ## TODO: add csv and backmap arguements
+    with open(csv_path) as cp:
+        reader = csv.reader(cp, delimiter=delim)
+        for row in reader:
+            yield Element(name=row[0], accession=None, chr=row[10][2:],
+                          startLocation=row[11], endLocation=row[12],
+                          length=int(row[12]) - int(row[11]) status=8, seq=None)
+
+def add_flanks(els):
+    '''
+    Searches and retrieves flanks for elements created from csv file
+    '''
+    for e in els:
+        seq, l, r = get_seq_flanks(e)
+
 
 def search_BDB(start, end, entry, r_seq=True):
     '''
@@ -157,20 +187,13 @@ def make_element(parser, header, seq, BDB):
 
 
 
-def make_soy_element(header, seq, acc_dict):
-    '''
-    Parses the header and seq of a soybase element and returns and eleemnt
-    object that is ready for backmap processing.
-    '''
-    h = header.split(' ')
-    name = h[0][1:0] # remove > from name
-    chr = name.split('_')[2][2:].split('-')[0]
-    acc = acc_dict(chr)
-    start, end = tuple(h[-1].split(':')[-1].split('..'))
-    length = end - start
-    status = h[-2].split('=')[-1]
+def make_soy_element(header, seq, acc_dict=None):
 
     return Element(name, acc, chr, start, end, length, status, seq)
+
+
+print(make_soy_element('>name=RLG_Gmr3_Scaffold328-1 Reference=Du et al. 2010 BMC Genomics 2010, 11:113 Class=I Sub_Class=I Order=LTR Super_Family=Gypsy Family=Gmr3 Description=SOLO', seq='AAA'))
+
 
 def make_general_element(delim, header, seq):
     h = header.split(delim)
