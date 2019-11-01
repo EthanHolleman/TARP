@@ -16,12 +16,13 @@ class Cluster():
             return 0
 
     def __init__(self, num=None, parent_file=None):
-        self.num = num
+        self.num = num.strip()
         self.elements = set([])
         self.parent_file = parent_file
-        self.num_elements = len(self.elements)
+        self.num_elements = 0
         self.average_similarity = self.get_average_similarity()
         self.fasta = None
+        self.consensus = None
         # num = cluster number, elements = elements in the cluster given by
         # cd-hit file info, parent_file = clstr file cluster came from
         # num elements = number elements in the cluster,
@@ -32,6 +33,7 @@ class Cluster():
     def add_element(self, el):
         if isinstance(el, ClstrElement):
             self.elements.add(el)
+            self.num_elements += 1
             return True
         else:
             return False
