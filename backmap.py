@@ -6,76 +6,73 @@ from Transposer.search import get_seq_flanks
 from Transposer.search import search_BDB
 
 
-# need to think about the case you have a scaffold and therefore
-# you dont know which chromosome is will be on so the sequences wont work
-# for this one so needs to be another method to return these elements
-# as well
-# for these could do a hamming distance seq comparison and see if find any
-# matches
+def test_unanchored(s):
+    '''
+    Test for reading in soy elements in soybase tab delim summary file.
+    Checks if element is unanchored
+    '''
+    s = s[2:]
+    try:
+        s = int(s)
+        return s  # remove GM header portion
+    except ValueError:
+        return 0
+        # was not castable likely unanchored
 
-def make_soy_elements(csv_path, delim='\t'):
+def translate_chr(chr_dict, chr):
+    try:
+        return chr_dict[chr]
+    except KeyError:
+        return None
+
+
+def make_chr_dict(acc_path):
+    acc_dict = {}
+    with open(acc_path) as names:
+        next(names)
+        for line in names:
+            l = line.strip().split('\t')
+            acc_dict[int(l[0])] = l[1]
+    return acc_dict
+
+
+def make_soy_elements(csv_path, acc_path, delim='\t'):
     '''
     Reads in a tab delim by defualt file that contains element descriptions
     in the soybase format and converts entries to element objects.
     '''
-    ## TODO: add csv and backmap arguements
+    elements = []
+    chr_dict = make_chr_dict(acc_path)
+    print(chr_dict[1])
+    # TODO: add csv and backmap arguements
     with open(csv_path) as cp:
         reader = csv.reader(cp, delimiter=delim)
+        next(reader)
         for row in reader:
-            yield Element(name=row[0], accession=None, chr=row[10][2:],
-                          startLocation=row[11], endLocation=row[12],
-                          length=int(row[12]) - int(row[11]) status=8, seq=None)
+            try:
 
-def add_flanks(els):
+                chr = test_unanchored(row[8])
+                acc = translate_chr(chr_dict, chr)
+                elements.append(Element(name=row[0], accession=acc,
+                                        chr=chr, startLocation=row[10],
+                                        endLocation=row[11],
+                                        length=int(row[11]) - int(row[10]),
+                                        status=row[7], seq=None))
+            except IndexError as e:
+                continue
+    return elements
+
+
+def add_flanks(els, BDB):
     '''
     Searches and retrieves flanks for elements created from csv file
     '''
     for e in els:
-        seq, l, r = get_seq_flanks(e)
+        e.seq, e.left, e.right = get_seq_flanks(e.startLocation,
+                                                e.endLocation, e.acc, BDB)
 
 
-def search_BDB(start, end, entry, r_seq=True):
-    '''
-    search the blast db for a sequence in an entry
-    '''
-
-    seq_cmd = 'blastdbcmd -db {} -dbtype nucl -range {}-{} -entry {}'.format(
-        self.BDB, start, end, entry)
-    try:
-        output = subprocess.check_output(seq_cmd, shell=True)
-    except subprocess.CalledProcessError as e:
-        return ''
-    if r_seq:
-        return ''.join(str(output).split('\\n')[1:])
-        # returns string of just the sequence
-    else:
-        return output  # else return all output
-
-def get_flanks(element, n=20):
-    '''
-    Takes in a list of elements and a blast
-    DB of the assembly and returns their flanking
-    sequences out to n. Flanks returned as a tuple first index is left flank
-    second is the right flank.
-    '''
-    lf = search_BDB(element.startLocation-(n+1), element.startLocation-1, element.accession)
-    rf = search_BDB(element.endLocation + 1, element.endLocation + (n+1), element.accession)
-
-    return tuple([lf, rf])
-
-def flank_elements(element_list, n=20):
-    '''
-    Takes in a list of elements and calls get_flanks on each to find
-    flanking sequences for all elements in the list. Returns a zipped
-    list of elements and their flanks as a tuple.
-    '''
-    flanks = []
-    for el in element_list:
-        flanks.append(get_flanks(el, n=n))
-
-    return zip(flanks, element_list)
-
-def make_flank_dict(zipped_els):
+def make_flank_dict(els):
     '''
     Returns a dictionary where keys are concat strings of left and flanking
     sequences and values are any elements that have those exact flanks. This
@@ -83,33 +80,64 @@ def make_flank_dict(zipped_els):
     but highly unlikely. The flank_dict can then be used to find exact matches
     to flanking sequences from the outdated elements.
     '''
-    flank_dict = {}
-    for f, el in zipped_els:
-        l, r = f  # unpack flank tuple
-        f = l + r  # make string of both flanks to use as key for exact matches
+    return {el.left + el.right: el for el in els}
+
+
+def test_exact(flank_dict, els):
+    # m = matches, nmo = non matches old, nmn = non matches new
+    m, nm = [], []
+    for el in els:
+        f = el.left + el.right
         if f in flank_dict:
-            flank_dict[f].append(el)
+            m.append((el, flank_dict.pop(flank_dict[f])))
         else:
-            flank_dict[f] = [el]
+            nm.append(el)
+    return (m, nm)
 
-    return flank_dict
+
+def chr_indexer(flank_dict):
+    '''
+    Takes in list of old elements and returns a list of lists. Accessing
+    index of list will equal to chromosome number -1. Base 0.
+    '''
+    max_chr = 0
+    for f, el in flank_dict.items():
+        if el.chr > max_chr:
+            max_chr = el.chr
+
+    index = [[] for i in range(0, max_chr)]
+    for f, el in flank_dict.items():
+        index[el.chr - 1].append(el)
+
+    return index
+    # since exact matches has already been run the index list will only contain
+    # old elements that no exact matches were found to
 
 
-def test_exact_flanks(flank_dict, flank_tuple):
-    # what to be able to create a list of only the elements that did not
-    # get exact matches but keep them in order so can run the next backmap
-    # with hamming distance on those
-    l, r = flank_tuple
-    if l+r in flank_dict:
-        return flank_dict[l+r]
-    else:
-        return False
+def get_tf(el):
+    return el.left + el.right
+
+
+def rum_ham(index, nm, m, dist=5):
+    for el in nm:
+        f = get_tf(el)
+        for i, oel in enumerate(index[el.chr - 1]):
+            if test_ham(f, get_tf(oel)) <= dist:
+                m.append((el, index[el.chr - 1].pop(i)))
+                break
+        # no matches found at this point
+        nm.append(el)
+    return (m, nm, index)
+    # index can be used to get old elements with no matches
+
+# need to also keep non matches old and new seperated
+# could just have two different lists
 
 
 def test_ham(flank_a, flank_b):
     diffs = 0
     for a, b in zip(flank_a, flank_b):
-        if a!= b:
+        if a != b:
             diffs += 1
     return diffs
 
@@ -129,23 +157,6 @@ def el_chr_dict(elements):
 
     return chr
 
-def rum_ham(elements, old_el_dict, dist=5):
-    '''
-    Need to compare the flanks of elements here maybe not worth doing the exact
-    method and just do the hamming distance instead. Dictionary of old elements
-    needs to be for the flanks but could calculate the flanks for new elements
-    right away or include the flanks in the element type so dont have to so another
-    search and just get the flanks right away.
-    '''
-    cur_chr = 0
-    for el in elements:
-        for old_el in old_el_dict[el.chr]:
-            tf = el.left + el.right
-            otf = old_el.left + old_el.right
-            if test_ham(tf, otf) <= dist:
-                yield tuple([el, old_el])
-                break
-
 
 def make_backmap(el_list, flank_dict):
     map = []
@@ -158,17 +169,9 @@ def make_backmap(el_list, flank_dict):
     return map
 
 
-def make_chr_dict(acc_path):
-    acc_dict = {}
-    with open(acc_path) as names:
-        for line in names:
-            l = line.strip().split('\t')
-            acc_dict[l[0]] = l[1]
-    return acc_dict
-
 def parse_soy_header(header):
     h = header.split(' ')
-    name = h[0][1:0] # remove > from name
+    name = h[0][1:0]  # remove > from name
     chr = name.split('_')[2][2:].split('-')[0]
     acc = acc_dict(chr)
     start, end = tuple(h[-1].split(':')[-1].split('..'))
@@ -186,13 +189,12 @@ def make_element(parser, header, seq, BDB):
                    left=left, right=right)
 
 
-
 def make_soy_element(header, seq, acc_dict=None):
 
     return Element(name, acc, chr, start, end, length, status, seq)
 
 
-print(make_soy_element('>name=RLG_Gmr3_Scaffold328-1 Reference=Du et al. 2010 BMC Genomics 2010, 11:113 Class=I Sub_Class=I Order=LTR Super_Family=Gypsy Family=Gmr3 Description=SOLO', seq='AAA'))
+#print(make_soy_element('>name=RLG_Gmr3_Scaffold328-1 Reference=Du et al. 2010 BMC Genomics 2010, 11:113 Class=I Sub_Class=I Order=LTR Super_Family=Gypsy Family=Gmr3 Description=SOLO', seq='AAA'))
 
 
 def make_general_element(delim, header, seq):
@@ -202,6 +204,8 @@ def make_general_element(delim, header, seq):
 # that way they could be renamed with the info from fasta writer tool
 # want to make that a seperate function and then fasta
 # writer just runs through all that
+
+
 def write_map(map, output):
     '''
     Writes a backmap file which is csv file where each row contains
@@ -212,7 +216,7 @@ def write_map(map, output):
         writer = csv.writer(out)
         for a, b in map:
             row = [a.name, a.chr, a.startLocation, a.length, a.seq,
-                     b.name, b.chr, b.startLocation, b.length, b.seq]
+                   b.name, b.chr, b.startLocation, b.length, b.seq]
             writer.writerow(row)
 
     # return the element with the same flank
