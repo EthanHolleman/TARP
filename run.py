@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+
 import os
 import subprocess
 
@@ -93,38 +93,69 @@ class Run():
         or make so you can pass in a function that allows for
         calculating min value.
         '''
-        self.cie_clstrs.trim_clusters(min_elements)
-        if self.csi_clstrs is not None:
-            self.csi_clstrs.trim_clusters(min_elements)
+        def clstr_count(clstr_set):
+            '''
+            Returns clstrs that are above min number of elements. If no clusters
+            are above min elements returns 2 if no clstr has more than 1 element
+            returns 1.
+            '''
+            sum = 0
+            clstrs = []
+            for clstr in clstr_set:
+                if clstr.num_elements >= min_elements:
+                    clstrs.append(clstr)
+                else:
+                    sum += clstr.num_elements
+            if clstrs:
+                return clstrs
+            elif sum == len(clstr_set):
+                return clstr_set
+            else:
+                return None
+
+        self.cie_clstrs.clusters_set = clstr_count(self.cie_clstrs.clusters_set)
+        self.csi_clstrs.clusters_set = clstr_count(self.csi_clstrs.clusters_set)
 
 
     def make_clstr_fastas(self):
         '''
         Write fasta files from the clusters. Should trim the clusters before
-        calling this method pretty much always.
+        calling this method pretty much always. At this point the clusters_set
+        should be a tuple with first value being 0-2. 0 = clusters were trimmed
+        and contain clusters beyond min element threshold. 1 = all clusters in
+        set have 1 element and 2 = no clusters have beyond min value but some
+        have more than 1 element.
         '''
-        self.cie_cons = self.cie_clstrs.write_cluster_fastas(
-            self.cie, self.write_dirs[0], new_dir=False)
-        if self.csi_clstrs is not None:
-            self.csi_cons = self.csi_clstrs.write_cluster_fastas(
-                self.csi, self.write_dirs[0], new_dir=False)
 
-    def make_consensensi_teo(self, min_elements=2, n =21):
-        bar = Bar('Making intact consensuses', max=len(self.cie_cons))
-        for clstr in self.cie_clstrs.clusters_set:
-            con_name = clstr.fasta + '_intact_con'
-            bar.next()
-            make_consensus(clstr.fasta, con_name, min_elements, n=n)
-            clstr.consensus = con_name
+        def fasta_decision(clstr_file, og_fasta):
+            if clstr_file.clusters_set != None:
+                w = self.write_dirs[0]
+                return clstr_file.write_cluster_fastas(og_fasta, w)
+            else:
+                return []
 
-        bar_2 = Bar('Making solos consensuses',
-                            max=len(self.csi_cons))
+        self.cie_cons = fasta_decision(self.cie_clstrs, self.cie)
         if self.csi_clstrs is not None:
-            for clstr in self.csi_clstrs.clusters_set:
-                con_name = clstr.fasta + '_solo_con'
-                bar_2.next()
-                make_consensus(clstr.fasta, con_name, min_elements, n=n)
-                clstr.consensus = con_name
+            self.cie_cons = fasta_decision(self.csi_clstrs, self.csi)
+
+
+    def make_consensensi_teo(self, min_elements=2, n=21):
+
+        def make_con(clstr_file, con_str):
+            if clstr_file.clusters_set != []:
+                for clstr in clstr_file.clusters_set:
+                    con_name = clstr.fasta + con_str
+                    if clstr.num_elements > 1:
+                        make_consensus(clstr.fasta, con_name, min_elements, n=n)
+                        clstr.consensus = con_name
+                    else:
+                        clstr.consensus = clstr.fasta
+        print('Making Intact consensuses')
+        make_con(self.cie_clstrs, '_intact_con')
+        if self.csi_clstrs is not None:
+            print('Making SOlo consensuses')
+            self.cie_cons = make_con(self.csi_clstrs, '_solo_con')
+
 
     def make_consensensi(self, min_elements=2, n=21):
         '''
@@ -153,7 +184,6 @@ class Run():
                 csi_cons.append(con_name)
             self.csi_cons = csi_cons
 
-
     def make_jobs_two(self):
         sam_dir = self.write_dirs[1]
         jobs = []
@@ -177,7 +207,6 @@ class Run():
                                intact_len=ave_len))
         self.jobs = jobs
 
-
     def run_jobs(self, threads=1):
         '''
         Runs the jobs and stores sam file objects. using methods from sam class
@@ -185,6 +214,7 @@ class Run():
         the elements are ready to be placed into a final order and then written to
         a fasta file.
         '''
+        print('\nRunning {} bowtie2 jobs'.format(len(self.jobs)))
         sam_dir = self.write_dirs[1]  # stored at 1 index always
         for job in self.jobs:
             job.search_BTI()

@@ -43,7 +43,7 @@ def set_args():
     parser.add_argument('-acc_o', type=str, help='Path to accession file for outdated assembly')
     parser.add_argument('-acc_c', type=str, help='Path to accession file for current assembly')
     parser.add_argument('-name', type=str, help='Name of the run, all data will be written in dir under this name')
-    parser.add_argument('-M', action='store_true', help='Run backmapping, default = true, set to false to prevent backmapping')
+    parser.add_argument('-M', default=False, help='Run backmapping, default = true, set to false to prevent backmapping')
     parser.add_argument('-E', default=2, help='Min number of elements required in a cluster for a consensus to be made and searched. Increasing this value will decrease runtime but also decrease the number of elements found.')
     args = parser.parse_args()
     print_logo()

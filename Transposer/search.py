@@ -80,21 +80,24 @@ def search_BDB(BDB, start, end, entry, r_seq=True):
     except subprocess.CalledProcessError as e:
         return ''
     if r_seq:
-        return ''.join(str(output).split('\\n')[1:])
+        return ''.join(str(output).split('\\n')[1:-1])
         # returns string of just the seq
     else:
         return output  # else return all output
 
 
-def get_seq_flanks(start, end, entry, BDB, flank_len):
+def get_seq_flanks(start, end, entry, BDB, flank_len=20):
     '''
     Uses search BDB to get the seq and right and left flanks.
     Returns as a tuple (seq, left, right)
     '''
-    seq = self.search_BDB(BDB, start-flank_len, end+flank_len, entry)
-    left, right = seq[:flank_len], seq[len(seq)-flank_len:]
-    seq = seq[flank_len:-flank_len]
-    return tuple([seq, left, right])
+    if entry == None:
+        return ('', '', '')
+    else:
+        seq = search_BDB(BDB, int(start)-flank_len, int(end)+flank_len, entry)
+        left, right = seq[:flank_len], seq[len(seq)-flank_len:]
+        seq = seq[flank_len:-flank_len]
+        return (seq, left, right)
 
 
 class Search():
@@ -169,22 +172,6 @@ class Search():
             for e in self.element_set:
                 e.status = 'I'
 
-    def search_BDB(self, start, end, entry, r_seq=True):
-        '''
-        search the blast db for a seq in an entry
-        '''
-        cmd = ['blastdbcmd', '-db', self.BDB, '-dbtype', 'nucl', '-range', str(start) + '-' + str(end), '-entry', entry]
-        cmd = ' '.join(cmd)
-        try:
-            output = subprocess.check_output(cmd, shell=True)
-        except subprocess.CalledProcessError as e:
-            return ''
-        if r_seq:
-            return ''.join(str(output).split('\\n')[1:])
-            # returns string of just the seq
-        else:
-            return output  # else return all output
-
     # need to put get seq and flanks in a more general position so that
     # the old elements can use it
 
@@ -204,9 +191,7 @@ class Search():
                         start = int(row[3])  # 1 based start
                         length = cigarParser(row[5])
                         end = start + length
-                        seq = self.search_BDB(start-flank_len, end+flank_len, acc)
-                        left, right = seq[:flank_len], seq[len(seq)-flank_len:-1]  # ' at end of sequence
-                        seq = seq[flank_len:-flank_len]
+                        seq, left, right = get_seq_flanks(start, end, acc, self.BDB)
                         # get flanking sequences for backmapping to avoid additional searches
                         element_set.add(
                             Element(name, acc, chr, start, end, length, self.type, seq, left, right))
@@ -220,9 +205,9 @@ class Search():
             return set([])
 
 
-    def search_BTI(self, defualt=True, custom=None, k_fuct=3, preset='--sensitive', threads=8):
+    def search_BTI(self, defualt=True, custom=None, k_fuct=10, preset='--sensitive', threads=8):
         defualt_cmd = ['bowtie2', '-x', self.BTI, '-f', self.con_file, '-k',
-                       round(self.num_old_els * k_fuct), preset, '-S', self.out_file, '--n-ceil', 'L,0,0.20.']
+                       round(self.num_old_els * k_fuct + self.num_old_els), preset, '-S', self.out_file, '--n-ceil', 'L,0,0.20.']
         cmd = [str(c) for c in defualt_cmd]
         try:
             FNULL = open(os.devnull, 'w')

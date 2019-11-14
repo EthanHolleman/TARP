@@ -90,7 +90,7 @@ class ClstrFile():
         self.clusters_set = select_clstrs
 
 
-    def write_cluster_fastas(self, original_fasta_path, path=os.getcwd(), new_dir=True):
+    def write_cluster_fastas(self, original_fasta_path, path, new_dir=False):
         '''
         Iterates through all clusters in the cluster set and creates a fasta
         file of the elements in those clusters. Path is where new dir containing
@@ -122,7 +122,7 @@ class ClstrFile():
                     write_list.append(search_dict[clstr_element.name])
             # write all elements found in dictionart to cluster fasta file
             write_from_tuple_list(write_list, file_name)
-            cluster.fasta = file_name  # change fasta variable of the cluster
+            cluster.fasta = file_name# change fasta variable of the cluster
 
         return fasta_paths
 
