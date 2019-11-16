@@ -2,9 +2,7 @@ import os
 import subprocess
 from fasta_tools import make_consensus
 from fasta_tools import check_formating
-from progress.spinner import Spinner
 
-CDHIT = './cdhit'
 FILE_EXT = 'fa'
 
 
