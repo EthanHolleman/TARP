@@ -5,3 +5,6 @@
 
 #ignore .pyc files
 *.pyc
+
+#ignore temp test file
+temp_tester.py
