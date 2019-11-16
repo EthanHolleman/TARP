@@ -4,7 +4,7 @@ import time
 
 from args import set_args
 from args import check_depends
-from run import Run
+from Run.run import Run
 from Transposer.process_sams import sort_elements
 from Transposer.process_sams import sort_sams
 from Transposer.process_sams import rename_elements
