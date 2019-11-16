@@ -29,25 +29,6 @@ def run_cd_hit(output, input_file):
         return e
     # cd hit for a single file
 
-def HIT_EM_WITH_IT(element_list, output):
-    output_paths = []
-    HIT = os.path.join(CDHIT, 'cd-hit-est')
-    for family in element_list:
-        output = os.path.join(output, os.path.basename(
-            family).split('.')[0] + '.clstr')
-        cmd = [HIT, '-i', family, '-o', output,
-               '-sc', '-sf', '-T', '6', '-d', '0']
-        string = ''
-        for letter in cmd:
-            string += str(letter + ' ')
-        os.system(string + '&> /dev/null')
-        output_paths.append(output)
-        # print(string)
-        #subprocess.call(cmd, shell=True)
-        # for some reason subprocess not working ???
-    return output_paths
-
-
 def make_consensus_clusters(clstr_fastas, output_dir, min_elements=4):
     # clstr_fastas is a dir containing the cluster fasta files
     min_elements *= 2  # number lines / 2 = number elements

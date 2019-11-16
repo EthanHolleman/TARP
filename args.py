@@ -69,10 +69,3 @@ def set_args():
         sys.exit()
     else:
         return args
-
-
-# confiles can be made with one consensus to rule them all from fasta tools
-# args that need to add
-# run name, potentially need old bowtie index to do the cross validation
-# of consensus sequences
-# need to fix some of this crazy output from fasta tools
