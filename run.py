@@ -97,7 +97,6 @@ class Run():
         if self.csi_clstrs is not None:
             self.csi_clstrs.trim_clusters(min_elements)
 
-
     def make_clstr_fastas(self):
         '''
         Write fasta files from the clusters. Should trim the clusters before
@@ -109,7 +108,7 @@ class Run():
             self.csi_cons = self.csi_clstrs.write_cluster_fastas(
                 self.csi, self.write_dirs[0], new_dir=False)
 
-    def make_consensensi_teo(self, min_elements=2, n =21):
+    def make_consensensi_teo(self, min_elements=2, n=21):
         bar = Bar('Making intact consensuses', max=len(self.cie_cons))
         for clstr in self.cie_clstrs.clusters_set:
             con_name = clstr.fasta + '_intact_con'
@@ -118,7 +117,7 @@ class Run():
             clstr.consensus = con_name
 
         bar_2 = Bar('Making solos consensuses',
-                            max=len(self.csi_cons))
+                    max=len(self.csi_cons))
         if self.csi_clstrs is not None:
             for clstr in self.csi_clstrs.clusters_set:
                 con_name = clstr.fasta + '_solo_con'
@@ -153,7 +152,6 @@ class Run():
                 csi_cons.append(con_name)
             self.csi_cons = csi_cons
 
-
     def make_jobs_two(self):
         sam_dir = self.write_dirs[1]
         jobs = []
@@ -177,7 +175,6 @@ class Run():
                                intact_len=ave_len))
         self.jobs = jobs
 
-
     def run_jobs(self, threads=1):
         '''
         Runs the jobs and stores sam file objects. using methods from sam class
@@ -185,6 +182,7 @@ class Run():
         the elements are ready to be placed into a final order and then written to
         a fasta file.
         '''
+        print('\nRunning {} bowtie2 jobs'.format(len(self.jobs)))
         sam_dir = self.write_dirs[1]  # stored at 1 index always
         for job in self.jobs:
             job.search_BTI()

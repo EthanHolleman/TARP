@@ -31,6 +31,7 @@ def sort_sams(search_list):
 
     return sort_els
 
+
 def prune(e, n=75):
     '''
     Takes a sorted list of elements and removes elements that are within
@@ -41,7 +42,7 @@ def prune(e, n=75):
     chunks = []
     cur_chunk = []
     for i in range(1, len(e)):
-        d = e[i].startLocation - e[i-1].startLocation
+        d = e[i].startLocation - e[i - 1].startLocation
         if d > n:  # no nearby elements
             if len(cur_chunk) > 0:
                 if len(cur_chunk) >= 1:
@@ -51,13 +52,14 @@ def prune(e, n=75):
         else:
             cur_chunk.append(e[i])
 
+
 def pruner(seq, n=75):
     cur_chunk = []
     i = 0
     for i in range(0, len(seq)):
-        if i == len(seq) -1:
+        if i == len(seq) - 1:
             break
-        d = seq[i+1].startLocation - seq[i].startLocation
+        d = seq[i + 1].startLocation - seq[i].startLocation
         if d > n:
             yield seq[i]
 
@@ -81,7 +83,7 @@ def write_csv_header(writer):
                      'Status', 'Seq', 'Left Flank', 'Right Flank'])
 
 
-def rename_elements(sels): # deal with generator stuff for now
+def rename_elements(sels):  # deal with generator stuff for now
     i = 1
     cur_chr = None
     for el in sels:
