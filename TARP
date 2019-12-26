@@ -5,17 +5,20 @@ import time
 from args import set_args
 from args import check_depends
 from Run.run import Run
-from Transposer.process_sams import sort_elements
-from Transposer.process_sams import sort_sams
-from Transposer.process_sams import rename_elements
-from Transposer.process_sams import pruner
-from Transposer.process_sams import write_results
+from Transposer.sam_utils import sort_elements
+from Transposer.sam_utils import sort_sams
+from Transposer.sam_utils import rename_elements
+from Transposer.sam_utils import pruner
+from Transposer.sam_utils import write_results
 from backmap.backmap import *
 from backmap.backmap_write import *
+from backmap.feature_reader import *
+from backmap.anchored_remap import *
 
 # TODO: Move print statements
 def main():
     args = set_args()  # read args and assign to args
+
     intact_old = args.I
     solo_old = args.S
     BDB_old = args.P
@@ -27,6 +30,7 @@ def main():
     run_name = args.name
     backmap = args.M
     min = args.E
+    feats = args.F
     # assign passed arguements not really needed but done
     # to add some clarity later on
     # create the run object
@@ -48,15 +52,22 @@ def main():
     write_results(sels, out_base)
 
     # backmap elements
-    if backmap is not False:
+    if backmap:
+        print('Running Backmapping')
         old_els = make_soy_elements(backmap, acc_old)
         old_els = add_flanks(old_els, BDB_old)
         matches, unmatches, flank_dict = test_exact(make_flank_dict(old_els), sels)
         chr_index = chr_indexer(flank_dict)
         matches, unmatches, chr_index = rum_ham(chr_index, unmatches, matches)
-        print(len(matches), 'len matchs')
-        print(len(unmatches), 'len unmatch')
+        print('Running anchored_remap')
+        if feats:
+            if feats[-3:] == 'vcf': # is a vcf file
+                features_list = feature_sort(vcf_reader(feats))
+                matches, unmatches, chr_index = anchored_backmap(chr_index, unmatches, matches, features_list)
+
+
         # matches are appended and returned
+        print(len(matches), 'matches length')
         match_path = os.path.join(new_run.write_dirs[2], run_name + '_matches.csv')
         unmatch_path = os.path.join(new_run.write_dirs[2], run_name + '_unmatched.csv')
         match_writer(match_formater(matches), match_path)
