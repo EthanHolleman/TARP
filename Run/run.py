@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import os
 import subprocess
 
@@ -81,8 +82,9 @@ class Run():
             are above min elements returns 2 if no clstr has more than 1 element
             returns 1.
             '''
-            sum = 0
-            clstrs = []
+            sum, clstrs = 0, []
+            if len(clstr_set) == 1:  # if only one cluster made return it
+                return clstr_set
             for clstr in clstr_set:
                 if clstr.num_elements >= min_elements:
                     clstrs.append(clstr)
@@ -90,13 +92,14 @@ class Run():
                     sum += clstr.num_elements
             if clstrs:
                 return clstrs
-            elif sum == len(clstr_set):
+            elif sum == len(clstr_set):  # all have one element
                 return clstr_set
             else:
                 return None
 
         self.cie_clstrs.clusters_set = clstr_count(self.cie_clstrs.clusters_set)
-        self.csi_clstrs.clusters_set = clstr_count(self.csi_clstrs.clusters_set)
+        if self.csi_clstrs:
+            self.csi_clstrs.clusters_set = clstr_count(self.csi_clstrs.clusters_set)
 
 
     def make_clstr_fastas(self):
@@ -124,7 +127,7 @@ class Run():
     def make_consensensi_teo(self, min_elements=2, n=21):
 
         def make_con(clstr_file, con_str):
-            if clstr_file.clusters_set != []:
+            if clstr_file.clusters_set:
                 for clstr in clstr_file.clusters_set:
                     con_name = clstr.fasta + con_str
                     if clstr.num_elements > 1:
@@ -147,34 +150,37 @@ class Run():
         processed to remove LTRs that are apart of intact elements.
         '''
         sam_dir = self.write_dirs[1]
-        jobs = []
-        ave_len = 0
+        que_jobs = []
         clstrs, sam_suffic = None, None
 
-        def jobs(el_el_type):
+        def jobs(el_type, ave_len=None):
+            total_len = 0
             if el_type == 'I':
                 clstrs = self.cie_clstrs.clusters_set
                 sam_suffix = '_intact.sam'
             else:
-                clstrs = self.csi_clstrs.clusters_set
-                sam_suffix = '_solo.sam'
-
-            for clstr in clstrs:
-                sam_name = 'clstr_' + clstr.num + sam_suffix
-                sam_file = os.path.join(sam_dir, sam_name)
-                if el_type == 'I':
-                    l = get_intact_length(clstr.consensus)
-                    ave_len += l
+                if self.csi_clstrs:
+                    clstrs = self.csi_clstrs.clusters_set
+                    sam_suffix = '_solo.sam'
                 else:
-                    l = ave_len
-                jobs.append(Search(self.BTI, clstr.consensus, sam_file,
-                            clstr.num_old_els, el_type, self.cur_acc, self.cur_BDB,
-                            intact_len=l))
-        jobs('I')  # make intact jobs
-        ave_len = ave_len // len(self.cie_clstrs.clusters_set)
-        jobs('S')  # make solo jobs
+                    clstrs = None
+            if clstrs:
+                for clstr in clstrs:
+                    sam_name = 'clstr_' + clstr.num + sam_suffix
+                    sam_file = os.path.join(sam_dir, sam_name)
+                    if el_type == 'I':
+                        l = get_intact_length(clstr.consensus)
+                        total_len += l
+                    que_jobs.append(Search(self.BTI, clstr.consensus, sam_file,
+                                clstr.num_elements, self.cur_acc, self.cur_BDB,
+                                ave_len, el_type))
+            return total_len
 
-        self.jobs = jobs
+        total_len = jobs('I')  # make intact jobs
+        ave_len = total_len // len(self.cie_clstrs.clusters_set)
+        jobs('S', ave_len=ave_len)  # make solo jobs
+
+        self.jobs = que_jobs
 
     def run_jobs(self, threads=8):
         '''
@@ -191,7 +197,7 @@ class Run():
     def write_meta(self, run_name):
         '''
         Writes to output dir metadata about the TARPs run. Will include info
-        such as number of solo and intact clusters created, number of jobs run,
+        such as number of solo and intact clusters created, number of que_jobs run,
         total run time, the command used, output directory paths etc.
         '''
         pass

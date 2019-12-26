@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import subprocess
+import sys
 import os
 import csv
 from Transposer.sam_utils import *
@@ -9,11 +10,7 @@ from fasta_tools import check_formating
 
 
 class Search():
-    '''
-    # TODO: going to need to pass the BDB to the search objects now
-    becuase it is creating the element sets this also means that
-    going to need the the accession files
-    '''
+
 
     def __init__(self, BTI, con_file, out_file, num_old_els, acc, BDB, intact_len, type="I"):
         self.BTI = BTI
@@ -128,6 +125,9 @@ class Search():
         try:
             FNULL = open(os.devnull, 'w')
             retcode = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+            if retcode != 0:
+                print('Bowtie2 exited with code {}'.format(retcode))
+                sys.exit(retcode)
             self.make_element_set()
 
         except subprocess.CalledProcessError as e:
