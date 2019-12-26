@@ -88,7 +88,6 @@ def test_exact(flank_dict, els):
     m, nm = [], []
     for el in els:
         f = el.left + el.right
-        print(f, 'new element flank')
         if f in flank_dict:
             m.append((el, flank_dict.pop(flank_dict[f])))
         else:
@@ -120,6 +119,8 @@ def get_tf(el):
 
 
 def rum_ham(index, nm, m, dist=10):
+    # old elements are stored in the index if they are matched they are poped
+    # out
     nnm = []
     for el in nm:
         f = get_tf(el)
@@ -140,13 +141,12 @@ def test_ham(flank_a, flank_b):
     for a, b in zip(flank_a, flank_b):
         if a != b:
             diffs += 1
-    print(diffs, 'd')
     return diffs
 
 
 def el_chr_dict(elements):
     '''
-    Given a list of elements returns a dictionary key is chromosome and
+    Given a list of elements returns a dictionary; key is chromosome and
     values are elements in that chromosome. For backmapping is used for organizing
     the old elements. NEEDS TO BE CHANGED VALUE SHOULD BE OLD ELEMENT FLANKS.
     '''
