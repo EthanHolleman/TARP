@@ -1,9 +1,12 @@
 import csv
 import os
 import itertools
+import subprocess
+
 from operator import or_
 from functools import reduce
 from collections import deque
+
 
 
 def sort_elements(elements):
@@ -99,7 +102,7 @@ def rename_elements(sels):  # deal with generator stuff for now
     Renames elements based on their relative chromosomal location to other
     elements on thar chromosome. Format is [el name]:[chr number]-[order]
     '''
-    i = 1
+    i, count = 1, 0
     cur_chr = None
     for el in sels:
         if cur_chr != el.chr:
@@ -107,7 +110,9 @@ def rename_elements(sels):  # deal with generator stuff for now
             i = 1
         el.name = '{}:{}-{}'.format(el.name, cur_chr, i)
         i += 1
+        count += 1
         yield el
+
 
 
 def cigarParser(cigar):

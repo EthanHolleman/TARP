@@ -15,8 +15,8 @@ class Element:
         self.right = right
 
     def __repr__(self):
-        return return (f'{self.__class__.__name__}('
-                       f'{self.name}, {self.startLocation})')
+        return (f'{self.__class__.__name__}('
+                      f'{self.name}, {self.startLocation})')
 
     def get_header(self):
         '''
