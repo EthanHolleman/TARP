@@ -109,6 +109,7 @@ class ClstrFile():
         for element_tuple in lines:
             search_dict[element_tuple[0].split(' ')[0]] = element_tuple
 
+
         fasta_paths = []  # store the paths of written files
         for cluster in self.clusters_set:
             write_list = []  # contains elements in cluster to be written to file
@@ -118,10 +119,12 @@ class ClstrFile():
             fasta_paths.append(file_name)
             count = 0
             for clstr_element in cluster.elements:
+
                 if clstr_element.name in search_dict:
                     write_list.append(search_dict[clstr_element.name])
             # write all elements found in dictionart to cluster fasta file
             write_from_tuple_list(write_list, file_name)
+
             cluster.fasta = file_name# change fasta variable of the cluster
 
         return fasta_paths

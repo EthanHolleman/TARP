@@ -52,12 +52,9 @@ class Cluster():
             lines = read_as_tuples(self.parent_file.split('.')[0])  # read as tuples opens the file
 
             for element_tuple in lines:
-                #print(type(element_tuple[0].split(' ')[0]))
                 search_dict[element_tuple[0].split(' ')[0]] = element_tuple
             # make the search dictionary
 
-            #print(len(search_dict), 'len dict')
-            #print(len(self.elements), 'len set elements')
             # sets have lengths greater than one
             cluster_hits = 0
             for clstr_element in self.elements:
