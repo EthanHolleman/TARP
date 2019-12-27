@@ -102,17 +102,14 @@ def rename_elements(sels):  # deal with generator stuff for now
     Renames elements based on their relative chromosomal location to other
     elements on thar chromosome. Format is [el name]:[chr number]-[order]
     '''
-    i, count = 1, 0
-    cur_chr = None
+    cur_chr, i = None, 1
     for el in sels:
         if cur_chr != el.chr:
             cur_chr = el.chr
-            i = 1
-        el.name = '{}:{}-{}'.format(el.name, cur_chr, i)
+            i = 1  # reset i at each new chromosome
+        el.name = '{}-{}'.format(cur_chr, i)
         i += 1
-        count += 1
         yield el
-
 
 
 def cigarParser(cigar):

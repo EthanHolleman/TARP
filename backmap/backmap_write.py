@@ -23,14 +23,12 @@ def match_formater(matches):
 def match_writer(gen_matches, output):
     HEAD = ['Name', 'Chromosome', 'Accession', 'Start', 'Length', 'Left Flank',
             'Right Flank', 'Sequence'] * 2
-    print(HEAD)
     try:
         with open(output, 'w') as out:
             write = csv.writer(out, delimiter=',')
             write.writerow(HEAD)
             for m in gen_matches:
                 write.writerow(m)
-                print(m, 'writing now')
     except (FileNotFoundError, IsADirectoryError) as e:
         print('{} location not found or is a dir'.format(output))
 

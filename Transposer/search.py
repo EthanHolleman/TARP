@@ -53,23 +53,27 @@ class Search():
             # sort solos by start location
             i = 0
             n = len(sort_e) - 1
-            while i < n:
-                current = sort_e[i]
-                next = sort_e[i + 1]  # watch out of bounds error
-                if current.chr != next.chr:
-                    solo_set.add(current)
-                    i += 1
-                elif next.startLocation - self.intact_len + allowance <= current.endLocation:
-                    # elements are close enough to be intact
-                    i += 2
-                else:
-                    current.status = 'S'
-                    solo_set.add(current)
-                    i += 1
-                if i == n:  # last element if only one must be a solo
-                    sort_e[n].status = 'S'
-                    solo_set.add(sort_e[n])
-                    break
+            if n == 0:  # if only one element still gets added
+                sort_e[n].status = 'S'
+                solo_set.add(sort_e[n])
+            else:
+                while i < n:  # if only one element fails
+                    current = sort_e[i]
+                    next = sort_e[i + 1]  # watch out of bounds error
+                    if current.chr != next.chr:
+                        solo_set.add(current)
+                        i += 1
+                    elif next.startLocation - self.intact_len + allowance <= current.endLocation:
+                        # elements are close enough to be intact
+                        i += 2
+                    else:
+                        current.status = 'S'
+                        solo_set.add(current)
+                        i += 1
+                    if i == n:  # last element if only one must be a solo
+                        sort_e[n].status = 'S'
+                        solo_set.add(sort_e[n])
+                        break
             self.element_set = solo_set
         else:
             for e in self.element_set:
@@ -104,8 +108,8 @@ class Search():
                             Element(name, acc, chr, start, end, length, self.type, seq, left, right))
 
             self.element_set = element_set
-            self.remove_dups()
-            self.type_elements()
+            self.remove_dups()  # remove duplicate elements
+            self.type_elements()  # identify false solos (actually LTRs)
 
             return 0
         except FileNotFoundError as e:

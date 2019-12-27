@@ -31,5 +31,4 @@ def vcf_reader(vcf_file, header='##'):
                 else:
                     ID, chr, pos, type = row[2], row[0], row[1], 'SNP'
                     features.append(feature(ID, chr, pos, type))
-        print(len(features), 'length of flat features')
         return features

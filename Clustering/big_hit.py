@@ -18,9 +18,7 @@ def get_element_files():
 
 def run_cd_hit(output, input_file):
     cmd = ['cd-hit-est', '-i', input_file, '-o', output, '-T', '6', '-d', '0']
-    #cmd = ' '.join(cmd)
-    #cmd = cmd + ' &> /dev/null'
-    #print(cmd)
+
     FNULL = open(os.devnull, 'w')
     try:
         hit = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
