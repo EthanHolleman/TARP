@@ -46,8 +46,8 @@ def make_soy_elements(csv_path, acc_path, delim='\t'):
     # TODO: add csv and backmap arguements
     with open(csv_path) as cp:
         reader = csv.reader(cp, delimiter=delim)
-        next(reader)
-        for row in reader:
+        #next(reader)
+        for i, row in enumerate(reader):
             try:
                 chr = test_unanchored(row[8])
                 acc = translate_chr(chr_dict, chr)
@@ -57,7 +57,8 @@ def make_soy_elements(csv_path, acc_path, delim='\t'):
                                         length=int(row[11]) - int(row[10]),
                                         status=row[7], seq=None))
             except IndexError as e:
-                print('index error')
+                continue
+    print(len(elements), 'number elements made by make soy elements')
     return elements
 
 
@@ -65,9 +66,11 @@ def add_flanks(els, BDB):
     '''
     Searches and retrieves flanks for elements created from csv file
     '''
-    for e in els:
+    print(len(els), 'number elements to add', els)
+    for i, e in enumerate(els):
         e.seq, e.left, e.right = get_seq_flanks(e.startLocation,
                                                 e.endLocation, e.accession, BDB, 20)
+
     return els
 
 
@@ -123,17 +126,23 @@ def rum_ham(index, nm, m, dist=10):
     # out
     nnm = []
     for el in nm:
-        f = get_tf(el)
-        for i, oel in enumerate(index[el.chr - 1]):
-            if test_ham(f, get_tf(oel)) <= dist:
-                m.append((el, index[el.chr - 1].pop(i)))
-        # no matches found at this point
-        nnm.append(el)
+        f = get_tf(el)  # both flanks as one string
+        try:
+            old_elements = index[el.chr - 1]
+            if old_elements:
+                for i, oel in enumerate(old_elements):
+                    if test_ham(f, get_tf(oel)) <= dist:
+                        m.append((el, old_elements.pop(i)))
+            else:
+                nnm.append(el)
+        except IndexError:
+            nnm.append(el)  # chromosoe of new element not in old el index
+            continue
+
     return (m, nnm, index)
     # index can be used to get old elements with no matches
 
 # need to also keep non matches old and new seperated
-# could just have two different lists
 
 
 def test_ham(flank_a, flank_b):

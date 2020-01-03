@@ -1,5 +1,10 @@
 import math
 
+from backmap.feature_reader import feature_guesser
+from backmap.feature_reader import gene_reader
+from backmap.feature_reader import vcf_reader
+from Transposer.sam_utils import make_acc_dict
+
 def feature_sort(feature_iter, key=None, num_chr=20):
     '''
     Sorts features first into bins based on chromosome number and then by
@@ -7,30 +12,19 @@ def feature_sort(feature_iter, key=None, num_chr=20):
     correspond to increasing chromosome number.
     '''
     chr_bins, cur_chr = [[] for i in range(0, num_chr+1)], None
-    print(chr_bins)
-    print(len(feature_iter), 'number of features')
-    for i, chr in enumerate(chr_bins):
-        print(len(chr), 'number of features in chr before add {}'.format(i))
-        s = 0
+
     for f in feature_iter:
         if f.chr:
             if f.chr >= 0 and f.chr <= num_chr:
                 chr_bins[f.chr-1].append(f)
-                if f.chr == 1: s += 1
-            else:
-                print(type(f.chr))
-    print(s, 'NUMBER CHR 1')
-    for i, chr in enumerate(chr_bins):
-        print(len(chr), 'number of features in chr before sort {}'.format(i))
 
-    for bin, _ in enumerate(chr_bins):
+    for bin, _ in enumerate(chr_bins):  # sort each bin
         if key == None:
             chr_bins[bin] = sorted(chr_bins[bin], key=lambda x: x.position)
         else:
             chr_bins[bin] = sorted(chr_bins[bin], key=key)
-    length_bins = sum([len(b) for b in chr_bins])
-    for i, chr in enumerate(chr_bins):
-        print(len(chr), 'number of features in chr {}'.format(i))
+
+
     return chr_bins
 
 
@@ -55,11 +49,9 @@ def feature_flank_search(l, start, end, chr):
         low -= 1
         high -= 1
         print(low,high,'end of chromosome')
-    else:
-        print(l[chr][low].position, l[chr][high].position, 'positions in search')
-        while l[chr][high].position < end:
-            low+= 1
-    return l[chr][high], l[chr][low]
+
+
+    return l[chr][high], l[chr][low]  # l is index of features
 
 
 def is_ambigous_feature(chr, left_feat_ind, right_feat_ind, index):
@@ -70,13 +62,13 @@ def is_ambigous_feature(chr, left_feat_ind, right_feat_ind, index):
     '''
     c = 0
     print(left_feat_ind, right_feat_ind, 'feature locations')
-    for el in index[chr -1]:
+    for el in index[chr-1]:
         if el.startLocation > left_feat_ind and el.startLocation < right_feat_ind:
             c+=1
             print(c, el.name, el.startLocation)
             if c > 1:
-                return False
-    return True
+                return True
+    return False
 
 
 
@@ -94,20 +86,37 @@ def compare_flanking_features(el_a, el_b, features, index):
                                            el_b.endLocation, el_b.chr)
     if left_a == left_b and right_a == right_b:
         amb = is_ambigous_feature(el_a.chr, left_a.position, right_a.position, index)
-        print(amb, 'AMB\n\n\n\n')
-        return True
+        if amb:
+            return False
+        else:
+            return True
     else:
         return False
 
-def anchored_backmap(index, nm, m, features):
+def anchored_backmap(index, nm, m, features_path):
     '''
     Index = chr index from backmap.py, nm= non matching elements, m = list of
     matching elements.
     '''
     nnm = []
+    guess = feature_guesser(features_path)
+    if guess == 'S':
+        features = vcf_reader(features_path)
+    elif guess == 'G':
+        features = gene_reader(features_path)
+    print(len(features), 'feats length')
+    features = feature_sort(features)
     for el in nm:  # iterate through non-matched elements
-        for i, oel in enumerate(index[el.chr-1]):
-            if compare_flanking_features(el, oel, features, index):
-                m.append((el, index[el.chr-1].pop(i)))
-        nnm.append(el)
+        try:
+            old_elements = index[el.chr-1]
+            if old_elements:
+                for i, oel in enumerate(old_elements):
+                    if compare_flanking_features(el, oel, features, index):
+                        m.append((el, old_elements.pop(i)))
+            else:
+                nnm.append(el)
+        except IndexError:
+            nnm.append(el)
+
+
     return (m, nnm, index)

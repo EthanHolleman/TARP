@@ -2,14 +2,24 @@ import csv
 from backmap.feature import feature
 
 
-def gene_reader(gene_txt, acc_to_chr_dict, delim='\t'):
+def feature_guesser(feature_path):
+    if '.vcf' in feature_path:
+        return 'S'
+    else:
+        return 'G'
+
+
+def gene_reader(gene_txt, delim='\t'):
     genes = []
     with open(gene_txt) as gene:
         reader = csv.reader(gene, delimiter=delim)
-        reader.next()
+        next(reader)
         for row in reader:
-            ID, chr, pos, type = row[2], acc_to_chr_dict[row[10]], row[11], 'GENE'
-            genes.append(feature(ID, chr, pos, type))
+            try:
+                ID, chr, pos, type = row[2], row[10], row[12], 'GENE'
+                genes.append(feature(ID, chr, pos, type))
+            except ValueError:
+                continue
     return genes
 
 
