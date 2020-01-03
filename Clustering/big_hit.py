@@ -16,8 +16,8 @@ def get_element_files():
     print('Found', str(len(element_list)), 'files')
     return element_list
 
-def run_cd_hit(output, input_file):
-    cmd = ['cd-hit-est', '-i', input_file, '-o', output, '-T', '6', '-d', '0']
+def run_cd_hit(output, input_file, identity=0.85):
+    cmd = ['cd-hit-est', '-i', input_file, '-o', output, '-c', str(identity),  '-T', '6', '-d', '0']
 
     FNULL = open(os.devnull, 'w')
     try:
@@ -46,7 +46,7 @@ def make_consensus_clusters(clstr_fastas, output_dir, min_elements=4):
                        min_elements=min_elements + 1)
 
 
-def make_consensus_dirs(clstr_dir, output_dir, min_elements=4):
+def make_consensus_dirs(clstr_dir, output_dir, min_elements=2):
     #ALLOWED_FASTAS = set(['.fna', '.fasta', '.fa', '.fsa'])
     '''
     Extension on the make_consensus_clusters function. Instead of
