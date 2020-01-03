@@ -1,5 +1,3 @@
-# temp file for backmapping methods
-# stuff in here is likely to move
 import csv
 from Transposer.element import Element
 from Transposer.search import get_seq_flanks
@@ -18,6 +16,7 @@ def test_unanchored(s):
     except ValueError:
         return 0
         # was not castable likely unanchored
+
 
 def translate_chr(chr_dict, chr):
     try:
@@ -46,7 +45,7 @@ def make_soy_elements(csv_path, acc_path, delim='\t'):
     # TODO: add csv and backmap arguements
     with open(csv_path) as cp:
         reader = csv.reader(cp, delimiter=delim)
-        #next(reader)
+        # next(reader)
         for i, row in enumerate(reader):
             try:
                 chr = test_unanchored(row[8])
@@ -167,6 +166,7 @@ def el_chr_dict(elements):
             chr[el.chr].append(el)
 
     return chr
+
 
 def make_element(parser, header, seq, BDB):
     n, chr, acc, s, e, l, s = parser(header)

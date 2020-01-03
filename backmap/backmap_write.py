@@ -1,6 +1,7 @@
 import itertools
 import csv
 
+
 def index_teardown(index):
     '''
     Takes in the index used for ham searches after elements have been
@@ -10,15 +11,19 @@ def index_teardown(index):
     '''
     return (list(itertools.chain.from_iterable(index)))
 
+
 def match_formater(matches):
     '''
     Takes in match tuples and returns genorator that is ready to be written by
     match writer function.
     '''
     for a, b in matches:
-        x = [a.name, a.chr, a.accession, a.startLocation, a.length, a.left, a.right, a.seq]
-        y = [b.name, b.chr, b.accession, b.startLocation, b.length, b.left, b.right, b.seq]
-        yield x+y
+        x = [a.name, a.chr, a.accession, a.startLocation,
+             a.length, a.left, a.right, a.seq]
+        y = [b.name, b.chr, b.accession, b.startLocation,
+             b.length, b.left, b.right, b.seq]
+        yield x + y
+
 
 def match_writer(gen_matches, output):
     HEAD = ['Name', 'Chromosome', 'Accession', 'Start', 'Length', 'Left Flank',
@@ -31,6 +36,7 @@ def match_writer(gen_matches, output):
                 write.writerow(m)
     except (FileNotFoundError, IsADirectoryError) as e:
         print('{} location not found or is a dir'.format(output))
+
 
 def nomatch_writer(nm, output):
     pass

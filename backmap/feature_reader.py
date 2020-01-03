@@ -23,7 +23,6 @@ def gene_reader(gene_txt, delim='\t'):
     return genes
 
 
-
 def vcf_reader(vcf_file, header='##'):
     '''
     Reads a vcf formated file and yeilds feature objects for each SNP. Each
