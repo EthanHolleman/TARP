@@ -14,7 +14,16 @@ def write_csv(sels, output):
         for el in sels:
             writer.writerow(el.get_row())
 
-
+def get_element_files():
+    element_list = []
+    els = os.listdir(ELEMENTS)
+    for el in els:
+        ext = str(el.split('.')[-1])
+        if FILE_EXT == ext:
+            element_list.append(os.path.join(ELEMENTS, el))
+    print('Found', str(len(element_list)), 'files')
+    return element_list
+    
 
 def make_jobs(self):
     '''

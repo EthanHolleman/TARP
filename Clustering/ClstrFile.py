@@ -75,21 +75,6 @@ class ClstrFile():
         self.path = path
         self.clusters_set = read_cluster_file(path)
 
-    def trim_clusters(self, min_elements=10):
-        '''Remove clusters from the cluster set that do not meet an min
-        number of elements threshold. Purpose is to use this before creating
-        fasta files from clusters to avoid making fastas of single element
-        clusters. Although the min elements could be set to one if you wanted
-        to do that.
-        '''
-        select_clstrs = set([])
-        for clstr in self.clusters_set:
-            if len(clstr.elements) >= min_elements:
-                select_clstrs.add(clstr)
-
-        self.clusters_set = select_clstrs
-
-
     def write_cluster_fastas(self, original_fasta_path, path, new_dir=False):
         '''
         Iterates through all clusters in the cluster set and creates a fasta
