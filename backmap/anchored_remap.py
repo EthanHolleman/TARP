@@ -35,7 +35,6 @@ def feature_flank_search(l, start, end, chr):
     '''
     chr -= 1  # convert to index
     low, high, midpoint = 0, len(l[chr]) - 1, None
-    print(high, 'number elements in there')
     while low <= high:
         midpoint = int(math.floor((low + high) / 2))
         midpoint_value = l[chr][midpoint].position
@@ -48,7 +47,6 @@ def feature_flank_search(l, start, end, chr):
     if low == len(l[chr]):
         low -= 1
         high -= 1
-        print(low, high, 'end of chromosome')
 
     return l[chr][high], l[chr][low]  # l is index of features
 
@@ -60,7 +58,6 @@ def is_ambigous_feature(chr, left_feat_ind, right_feat_ind, index):
     between elements.
     '''
     c = 0
-    print(left_feat_ind, right_feat_ind, 'feature locations')
     for el in index[chr - 1]:
         if el.startLocation > left_feat_ind and el.startLocation < right_feat_ind:
             c += 1
@@ -76,7 +73,6 @@ def compare_flanking_features(el_a, el_b, features, index):
     Then compares the flanking features for each element. If they are the same
     will return true otherwise returns false.
     '''
-    print(el_a.startLocation, 'element a start location')
     left_a, right_a = feature_flank_search(features, el_a.startLocation,
                                            el_a.endLocation, el_a.chr)
     left_b, right_b = feature_flank_search(features, el_b.startLocation,
@@ -103,7 +99,6 @@ def anchored_backmap(index, nm, m, features_path):
         features = vcf_reader(features_path)
     elif guess == 'G':
         features = gene_reader(features_path)
-    print(len(features), 'feats length')
     features = feature_sort(features)
     for el in nm:  # iterate through non-matched elements
         try:
