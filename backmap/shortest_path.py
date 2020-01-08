@@ -1,23 +1,26 @@
 from backmap.anchored_remap import feature_sort
 from Transposer.element import Element
-from Transposer
-new = []
 
 
 def flatten(l):
     return [item for sublist in l for item in sublist]
 
 
-def run_min_distance(new_elements, old_elements):
+def run_min_distance(new_elements, old_elements, log_dir=None):
+    '''
+    Match new and old elements on each chromosome by type and location by
+    determining an optimal matching that minimizes the total distance
+    between elements.
+    '''
     matched, unmatched = [], []
     new_element_index = feature_sort(
         new_elements, key=lambda x: x.startLocation)
     old_element_index = feature_sort(
-        old_elementsld, key=lambda x: x.startLocation)
+        old_elements, key=lambda x: x.startLocation)
 
-    for i in range(len(old_elements_index)):  # len index dependent on num chr
+    for i in range(len(old_element_index)):  # len index dependent on num chr
         m, um = match_chromosome_elements(
-            new_element_index[i], old_elements_index[i])
+            new_element_index[i], old_element_index[i], log_dir)
         matched.append(m)
         unmatched.append(um)
 
@@ -33,7 +36,7 @@ def make_paired_index(new_element_list, index):
     return zip(chr_bins, index)
 
 
-def match_chromosome_elements(new_elements, old_elements):
+def match_chromosome_elements(new_elements, old_elements, log_dir=None):
     '''
     Given list of old elements in a chromsome, seperated them by type and
     then matches each type using shortest distance method. New and old elements
@@ -44,7 +47,7 @@ def match_chromosome_elements(new_elements, old_elements):
     for s in statuses:
         n, o = list(filter(lambda x: x.status, new_elements)), \
             list(filter(lambda x: x.status, old_elements))
-        cs, short, long = minimize_distance(n, o)  # find min distnace allign
+        cs, short, long = minimize_distance(n, o, log_dir)  # find min distnace allign
         matches += pair_matches(cs, short, long)
         unmatches += return_unmatched(cs, short, long)
 
@@ -76,7 +79,7 @@ def pair_types(dict_one, dict_two):
             dict_one[one_keys[1]], dict_two[one_keys[1]])
 
 
-def minimize_distance(list_one, list_two):
+def minimize_distance(list_one, list_two, min_log=None):
     if len(list_one) >= len(list_two):
         longer_list = list_one  # if the same doesnt matter which is longer list
         shorter_list = list_two
@@ -88,11 +91,13 @@ def minimize_distance(list_one, list_two):
     longer_list = sorted(longer_list, key=lambda x: x.startLocation)
 
     d, cs = len(longer_list) - len(shorter_list), (float('inf'), 0)
-    for i in range(0, d + 1):
-        s = sum(abs(x.startLocation - y.startLocation)
-                for x, y in zip(shorter_list, longer_list[i:len(shorter_list) + i]))
-        if s < cs[0]:
-            cs = (s, i)  # holds distance diff and i value of slice
+    with open(min_log, 'w') as ml:
+        for i in range(0, d + 1):
+            s = sum(abs(x.startLocation - y.startLocation)
+                    for x, y in zip(shorter_list, longer_list[i:len(shorter_list) + i]))
+            ml.write(str(s) + '\t')
+            if s < cs[0]:
+                cs = (s, i)  # holds distance diff and i value of slice
 
     return (cs[1], shorter_list, longer_list)
 

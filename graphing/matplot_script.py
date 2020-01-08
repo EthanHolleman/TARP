@@ -1,9 +1,11 @@
 from matplotlib import pyplot as plt
-from matplotlib.collections import BrokenBarHCollection
+from matplotlib.collections import BrokenBarCollection
+import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 import pandas
 
-HITS = '/media/ethan/EH_DATA/PAG/test.txt'
-
+HITS = '/media/ethan/EH_DATA/PAG/remapped_ideo.txt'
+#HITS = '/media/ethan/EH_DATA/PAG/old_ideo.txt'
 # Here's the function that we'll call for each dataframe (once for chromosome
 # ideograms, once for genes).  The rest of this script will be prepping data
 # for input to this function
@@ -31,7 +33,7 @@ def chromosome_collections(df, y_positions, height,  **kwargs):
     for chrom, group in df.groupby('chrom'):
         yrange = (y_positions[chrom], height)
         xranges = group[['start', 'width']].values
-        yield BrokenBarHCollection(
+        yield BrokenBarCollection(
             xranges, yrange, facecolors=group['colors'], **kwargs)
     if del_width:
         del df['width']
@@ -107,12 +109,20 @@ ax = fig.add_subplot(111)
 
 # Now all we have to do is call our function for the ideogram data...
 print("adding ideograms...")
+
+solo_patch = mpatches.Patch(color='#B98387', label='Solo')
+intact_patch = mpatches.Patch(color='#415184', label='Intact')
+plt.legend(handles=[solo_patch, intact_patch], loc='upper right')
+
+
 for collection in chromosome_collections(ideo, chrom_ybase, chrom_height):
     ax.add_collection(collection)
+ax.spines['top'].set_visible(False)
+ax.spines['right'].set_visible(False)
 
 # Axes tweaking
 ax.set_yticks([chrom_centers[i] for i in chromosome_list])
 ax.set_yticklabels(chromosome_list)
 ax.axis('tight')
-plt.title('Locations of Solo and Intact Elements of Gypsy Superfamily Remaped')
+plt.title('Locations of W82 2.1 Remapped Gypsy Transposable Elements')
 plt.show()
