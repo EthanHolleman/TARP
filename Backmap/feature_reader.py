@@ -1,5 +1,5 @@
 import csv
-from backmap.feature import feature
+from Backmap.feature import feature
 
 
 def feature_guesser(feature_path):

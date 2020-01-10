@@ -1,4 +1,4 @@
-from backmap.anchored_remap import feature_sort
+from Backmap.anchored_remap import feature_sort
 from Transposer.element import Element
 
 

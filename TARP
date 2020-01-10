@@ -11,8 +11,8 @@ from Transposer.sam_utils import rename_elements
 from Transposer.sam_utils import pruner
 from Transposer.sam_utils import write_results
 
-from Backmap.Backmap import *
-from Backmap.Backmap_write import *
+from Backmap.backmap import *
+from Backmap.backmap_write import *
 from Backmap.feature_reader import *
 from Backmap.anchored_remap import *
 from Backmap.shortest_path import run_min_distance

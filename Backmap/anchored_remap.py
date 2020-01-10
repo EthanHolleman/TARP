@@ -1,8 +1,8 @@
 import math
 
-from backmap.feature_reader import feature_guesser
-from backmap.feature_reader import gene_reader
-from backmap.feature_reader import vcf_reader
+from Backmap.feature_reader import feature_guesser
+from Backmap.feature_reader import gene_reader
+from Backmap.feature_reader import vcf_reader
 from Transposer.sam_utils import make_acc_dict
 
 
@@ -88,9 +88,9 @@ def compare_flanking_features(el_a, el_b, features, index):
         return False
 
 
-def anchored_backmap(index, nm, m, features_path):
+def anchored_Backmap(index, nm, m, features_path):
     '''
-    Index = chr index from backmap.py, nm= non matching elements, m = list of
+    Index = chr index from Backmap.py, nm= non matching elements, m = list of
     matching elements.
     '''
     nnm = []

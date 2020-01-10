@@ -2,7 +2,6 @@ import argparse
 import shutil
 import sys
 import multiprocessing as mp
-import time
 
 DEPENDS = './depends.txt'
 LOGO = './.logo.txt'
@@ -15,7 +14,6 @@ def print_logo():
     with open(LOGO) as logo:
         for l in logo.readlines():
             print(str(l.strip()))
-    time.sleep(2)
     check_depends()
 
 def check_depends():
