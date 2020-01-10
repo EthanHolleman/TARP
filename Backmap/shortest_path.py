@@ -3,6 +3,9 @@ from Transposer.element import Element
 
 
 def flatten(l):
+    '''
+    Turns a 2D list into a flat list.
+    '''
     return [item for sublist in l for item in sublist]
 
 
@@ -47,7 +50,8 @@ def match_chromosome_elements(new_elements, old_elements, log_dir=None):
     for s in statuses:
         n, o = list(filter(lambda x: x.status, new_elements)), \
             list(filter(lambda x: x.status, old_elements))
-        cs, short, long = minimize_distance(n, o, log_dir)  # find min distnace allign
+        cs, short, long = minimize_distance(
+            n, o, log_dir)  # find min distnace allign
         matches += pair_matches(cs, short, long)
         unmatches += return_unmatched(cs, short, long)
 
@@ -55,6 +59,9 @@ def match_chromosome_elements(new_elements, old_elements, log_dir=None):
 
 
 def get_statuses(elements):
+    '''
+    Returns the statuses (types) of elements in a collection.
+    '''
     statuses = set([])
     for el in elements:
         if el.status not in statuses:
@@ -63,6 +70,10 @@ def get_statuses(elements):
 
 
 def seperate_types(element_list):
+    '''
+    Given a list of elements returns a dictionary where keys are the statuses
+    (types) of elements and values are lists of elements in that category.
+    '''
     types_dict = {}
     for element in element_list:
         if element.status in types_dict:
@@ -74,12 +85,22 @@ def seperate_types(element_list):
 
 
 def pair_types(dict_one, dict_two):
+    '''
+    Pairs dictionaries with the correct element type. Used for merging dicts of
+    old and new elements.
+    '''
     one_keys = list(dict_one.keys())
     return (dict_one[one_keys[0]], dict_two[one_keys[0]],
             dict_one[one_keys[1]], dict_two[one_keys[1]])
 
 
 def minimize_distance(list_one, list_two, min_log=None):
+    '''
+    Complete distance minization functionality. Given two lists of elements
+    alligns the elements in the shorter list to the longer list using a sliding
+    window. Returns the "frameshift" required to minize the distance as an
+    integer, shorter list and longer list as a tuple.
+    '''
     if len(list_one) >= len(list_two):
         longer_list = list_one  # if the same doesnt matter which is longer list
         shorter_list = list_two
