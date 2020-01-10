@@ -11,13 +11,13 @@ from Transposer.sam_utils import rename_elements
 from Transposer.sam_utils import pruner
 from Transposer.sam_utils import write_results
 
-from backmap.backmap import *
-from backmap.backmap_write import *
-from backmap.feature_reader import *
-from backmap.anchored_remap import *
-from backmap.shortest_path import run_min_distance
+from Backmap.Backmap import *
+from Backmap.Backmap_write import *
+from Backmap.feature_reader import *
+from Backmap.anchored_remap import *
+from Backmap.shortest_path import run_min_distance
 
-# TODO: Move print statements
+
 def main():
     args = set_args()  # read args and assign to args
 
@@ -30,7 +30,7 @@ def main():
     acc_old = args.acc_o
     acc_cur = args.acc_c
     run_name = args.name
-    backmap = args.M
+    Backmap = args.M
     min = args.E
     feats = args.F
 
@@ -44,18 +44,16 @@ def main():
 
     new_run.run_jobs()  # run bowtie jobs
 
-    sels = rename_elements(pruner(sort_sams(new_run.jobs), f=100))
+    sels = list(rename_elements(pruner(sort_sams(new_run.jobs), f=100)))
     out_base = os.path.join(new_run.write_dirs[2], run_name)
-    sels = list(sels)
     write_results(sels, out_base)
 
-
     print('Running Backmapping')
-    old_els = make_soy_elements(backmap, acc_old)
+    old_els = make_soy_elements(Backmap, acc_old)
 
-    if backmap:
+    if Backmap:
         print('Running Backmapping')
-        old_els = make_soy_elements(backmap, acc_old)
+        old_els = make_soy_elements(Backmap, acc_old)
         min_log = os.path.join(new_run.write_dirs[2], run_name + '_log.txt')
         matches, unmatches = run_min_distance(sels, old_els, min_log)
 
@@ -63,16 +61,17 @@ def main():
         #matches, unmatches, flank_dict = test_exact(make_flank_dict(old_els), sels)
         #chr_index = chr_indexer(flank_dict)
         #matches, unmatches, chr_index = rum_ham(chr_index, unmatches, matches)
-        #if feats:
-        #    matches, unmatches, chr_index= anchored_backmap(chr_index, unmatches,
+        # if feats:
+        #    matches, unmatches, chr_index= anchored_Backmap(chr_index, unmatches,
         #                               matches, feats)
 
-
-
-        match_path = os.path.join(new_run.write_dirs[2], run_name + '_matches.csv')
-        unmatch_path = os.path.join(new_run.write_dirs[2], run_name + '_unmatched.csv')
+        match_path = os.path.join(
+            new_run.write_dirs[2], run_name + '_matches.csv')
+        unmatch_path = os.path.join(
+            new_run.write_dirs[2], run_name + '_unmatched.csv')
         match_writer(match_formater(matches), match_path)
         nomatch_writer(unmatches, unmatch_path)
+
 
 if __name__ == '__main__':
     main()

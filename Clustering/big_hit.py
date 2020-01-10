@@ -3,8 +3,6 @@ import subprocess
 from fasta_tools import make_consensus
 from fasta_tools import check_formating
 
-FILE_EXT = 'fa'
-
 
 def get_element_files():
     element_list = []
@@ -16,16 +14,19 @@ def get_element_files():
     print('Found', str(len(element_list)), 'files')
     return element_list
 
+
 def run_cd_hit(output, input_file, identity=0.85):
-    cmd = ['cd-hit-est', '-i', input_file, '-o', output, '-c', str(identity),  '-T', '6', '-d', '0']
+    cmd = ['cd-hit-est', '-i', input_file, '-o', output,
+           '-c', str(identity),  '-T', '6', '-d', '0']
 
     FNULL = open(os.devnull, 'w')
     try:
         hit = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
-        #os.system(cmd)
+        # os.system(cmd)
     except subprocess.CalledProcessError as e:
         return e
     # cd hit for a single file
+
 
 def make_consensus_clusters(clstr_fastas, output_dir, min_elements=4):
     # clstr_fastas is a dir containing the cluster fasta files

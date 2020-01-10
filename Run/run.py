@@ -13,8 +13,7 @@ from Run.run_utils import *
 
 from fasta_tools import make_consensus
 from fasta_tools import check_formating
-# return the length of the sequence which will
-# be in the second line
+
 
 
 def make_dirs(output, run_name):
@@ -34,7 +33,7 @@ def make_dirs(output, run_name):
         if os.path.isdir(dir) is False:
             os.mkdir(dir)
 
-    return tuple(write_dirs)
+    return (write_dirs)
 
 
 class Run():
@@ -67,7 +66,7 @@ class Run():
 
     def __repr__(self):
         return (f'{self.__class__.__name__}('
-           f'{self.cie}, {self.csi})')
+                f'{self.cie}, {self.csi})')
 
     def select_clusters(self, min_elements=3):
         '''
@@ -97,10 +96,11 @@ class Run():
             else:
                 return None
 
-        self.cie_clstrs.clusters_set = clstr_count(self.cie_clstrs.clusters_set)
+        self.cie_clstrs.clusters_set = clstr_count(
+            self.cie_clstrs.clusters_set)
         if self.csi_clstrs:
-            self.csi_clstrs.clusters_set = clstr_count(self.csi_clstrs.clusters_set)
-
+            self.csi_clstrs.clusters_set = clstr_count(
+                self.csi_clstrs.clusters_set)
 
     def make_clstr_fastas(self):
         '''
@@ -123,7 +123,6 @@ class Run():
         if self.csi_clstrs is not None:
             self.cie_cons = fasta_decision(self.csi_clstrs, self.csi)
 
-
     def make_consensensi_teo(self, min_elements=2, n=21):
 
         def make_con(clstr_file, con_str):
@@ -131,7 +130,8 @@ class Run():
                 for clstr in clstr_file.clusters_set:
                     con_name = clstr.fasta + con_str
                     if clstr.num_elements > 1:
-                        make_consensus(clstr.fasta, con_name, min_elements, n=n)
+                        make_consensus(clstr.fasta, con_name,
+                                       min_elements, n=n)
                         clstr.consensus = con_name
                     else:
                         clstr.consensus = clstr.fasta
@@ -140,7 +140,6 @@ class Run():
         if self.csi_clstrs is not None:
             print('Making Solo consensuses')
             self.cie_cons = make_con(self.csi_clstrs, '_solo_con')
-
 
     def make_jobs_two(self):
         '''
@@ -172,8 +171,8 @@ class Run():
                         l = get_intact_length(clstr.consensus)
                         total_len += l
                     que_jobs.append(Search(self.BTI, clstr.consensus, sam_file,
-                                clstr.num_elements, self.cur_acc, self.cur_BDB,
-                                ave_len, el_type))
+                                           clstr.num_elements, self.cur_acc, self.cur_BDB,
+                                           ave_len, el_type))
             return total_len
 
         total_len = jobs('I')  # make intact jobs

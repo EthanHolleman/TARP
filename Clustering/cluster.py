@@ -1,4 +1,3 @@
-# FASTA FILES HEADER MUST BE UNIQUE FOR THIS TO WORK
 from Clustering.element import ClstrElement
 from fasta_tools import read_as_tuples
 
@@ -6,8 +5,7 @@ from fasta_tools import read_as_tuples
 class Cluster():
 
     def get_average_similarity(self):
-        sum_sim = 0
-        l = 0
+        sum_sim, l = 0, 0
         if self.num_elements != 0:
             for el in self.elements:
                 sum_sim += el.similarity
@@ -49,7 +47,8 @@ class Cluster():
             fasta_elements = []
             search_dict = {}
 
-            lines = read_as_tuples(self.parent_file.split('.')[0])  # read as tuples opens the file
+            lines = read_as_tuples(self.parent_file.split(
+                '.')[0])  # read as tuples opens the file
 
             for element_tuple in lines:
                 search_dict[element_tuple[0].split(' ')[0]] = element_tuple
@@ -60,7 +59,6 @@ class Cluster():
             for clstr_element in self.elements:
                 if len(self.elements) > 1:
                     print(len(self.elements))
-
 
         except FileNotFoundError as e:
             return e

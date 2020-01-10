@@ -1,5 +1,8 @@
 # TARP: Transposable Element Assembly Remapping Pipeline
 
+## PAG Poster Link
+[Poster Link](https://drive.google.com/open?id=1H8wGdqWAdffG0Yw6Ii8iBKpZ3ta6S2VX)
+
 ## PAG Abstract
 
 Transposable elements are prolific throughout plant genomes and while originally regarded as nothing more than genetic parasites increasing number of studies have shown these elements to contribute significantly to the phenotypes of many significant agricultural species. Therefore, accurate and up to date information on the content of transposable elements in plant, genomes is an essential piece of information for many researchers.  
@@ -52,11 +55,11 @@ example of the format is shown below.
 Element ID	Reference	Class	Subclass	Order	Super Family	Family	Description	Unanchored Scaffold	Start Position	End Position
 RLG_Gmr3_Gm1-1	Du et al. 2010 BMC Genomics 2010, 11:113	I	I	LTR	Gypsy	Gmr3	INTACT	Gm01		5622921	5628239
 ```
-Pass this file into TARP with the arguement
+Pass this file into TARP with the argument
 `-M [Your file path]`
 
 Currently, you can also run feature based backmapping in addition to flank based
-backmap. To do so download a vcf formated file containing a collection of SNPs
-and store in a suitable directory. Pass this file into TARP with the arguement
-`-F [Your file path]`. You must also supply an arguement for `-M` to run feature
-based backmaping. 
+backmap. To do so download a vcf formatted file containing a collection of SNPs
+and store in a suitable directory. Pass this file into TARP with the argument
+`-F [Your file path]`. You must also supply an argument for `-M` to run feature
+based backmapping.

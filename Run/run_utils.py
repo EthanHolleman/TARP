@@ -12,9 +12,11 @@ def get_intact_length(con_file_path):
 
     return len(length[1])
 
+
 def make_clstr_name(path, clstr_dir):
     base = os.path.basename(path).split('.')[0]
     return os.path.join(clstr_dir, base)
+
 
 def make_clstr(fasta, clstr_dir):
     clstr_file_name = make_clstr_name(fasta, clstr_dir)

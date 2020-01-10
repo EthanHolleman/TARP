@@ -15,7 +15,6 @@ def make_element(element_string, cluster_num=None):
     Takes in a string with all ClstrElement info and returns
     and ClstrElement object.
     '''
-    # 0	10389nt, >name=RLG_Gmr1_Gm1-1... at +/82.14%
     element_string = element_string.strip()
     similarity = None
     rep = False
@@ -41,41 +40,13 @@ def make_element(element_string, cluster_num=None):
     return ClstrElement(name=name, ID=ID, similarity=similarity, nt=nt, rep=rep, cluster_num=cluster_num)
 
 
-def read_cluster_file(path):
-    '''
-    reads a .cltr type file into a dictionary where each key is the Cluster
-    header the values are the elements in that Cluster
-    '''
-    try:
-        with open(path, 'r') as clus_file:
-            Cluster_set = set([])
-            current_Cluster = None
-
-            for line in clus_file:  # iterate through all lines in file
-                if line[0] == '>':  # line is a header
-                    new_Cluster = read_cluster(line, parent_file=path)
-                    if new_Cluster not in Cluster_set:
-                        current_Cluster = new_Cluster  # save the new as current
-                        # add new Cluster to set
-                        Cluster_set.add(current_Cluster)
-                else:
-                    current_Cluster.add_element(make_element(line))
-                    # not header so is an ClstrElement so add to the Cluster object
-                    # designated as current_Cluster
-        return Cluster_set
-    except (FileNotFoundError, IsADirectoryError) as e:
-        print(path, 'gave the following errors', e)
-        print('Empty set added')
-        return set([])
-
-
 class ClstrFile():
 
     def __init__(self, path):
         self.path = path
         self.clusters_set = read_cluster_file(path)
 
-    def write_cluster_fastas(self, original_fasta_path, path, new_dir=False):
+    def write_cluster_fastas(self, original_fasta_path, path):
         '''
         Iterates through all clusters in the cluster set and creates a fasta
         file of the elements in those clusters. Path is where new dir containing
@@ -84,16 +55,12 @@ class ClstrFile():
         files. Returns the path files are written to.
         '''
         search_dict = {}  # assumes full path
-        lines = read_as_tuples(original_fasta_path)  # read as tuples opens the file
+        # read as tuples opens the file
+        lines = read_as_tuples(original_fasta_path)
         # all clusters of a file from the same original fasta
-        if new_dir is True:
-            path = os.path.join(path, os.path.basename(self.path.split('.')[0]))
-            if os.path.exists(path) is False:
-                os.mkdir(path)
 
         for element_tuple in lines:
             search_dict[element_tuple[0].split(' ')[0]] = element_tuple
-
 
         fasta_paths = []  # store the paths of written files
         for cluster in self.clusters_set:
@@ -110,7 +77,7 @@ class ClstrFile():
             # write all elements found in dictionart to cluster fasta file
             write_from_tuple_list(write_list, file_name)
 
-            cluster.fasta = file_name# change fasta variable of the cluster
+            cluster.fasta = file_name  # change fasta variable of the cluster
 
         return fasta_paths
 
@@ -122,3 +89,29 @@ class ClstrFile():
         '''
         for c in self.clusters_set:
             yield c.elements.pop().name
+
+    def read_cluster_file(path):
+        '''
+        reads a .cltr type file into a dictionary where each key is the Cluster
+        header the values are the elements in that Cluster
+        '''
+        try:
+            with open(path, 'r') as clus_file:
+                Cluster_set = set([])
+                current_Cluster = None
+                for line in clus_file:  # iterate through all lines in file
+                    if line[0] == '>':  # line is a header
+                        new_Cluster = read_cluster(line, parent_file=path)
+                        if new_Cluster not in Cluster_set:
+                            current_Cluster = new_Cluster  # save the new as current
+                            # add new Cluster to set
+                            Cluster_set.add(current_Cluster)
+                    else:
+                        current_Cluster.add_element(make_element(line))
+                        # not header so is an ClstrElement so add to the Cluster object
+                        # designated as current_Cluster
+            return Cluster_set
+        except (FileNotFoundError, IsADirectoryError) as e:
+            print(path, 'gave the following errors', e)
+            print('Empty set added')
+            return set([])
