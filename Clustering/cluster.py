@@ -52,13 +52,6 @@ class Cluster():
 
             for element_tuple in lines:
                 search_dict[element_tuple[0].split(' ')[0]] = element_tuple
-            # make the search dictionary
-
-            # sets have lengths greater than one
-            cluster_hits = 0
-            for clstr_element in self.elements:
-                if len(self.elements) > 1:
-                    print(len(self.elements))
 
         except FileNotFoundError as e:
             return e

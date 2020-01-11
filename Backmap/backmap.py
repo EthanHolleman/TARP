@@ -57,7 +57,6 @@ def make_soy_elements(csv_path, acc_path, delim='\t'):
                                         status=row[7], seq=None))
             except IndexError as e:
                 continue
-    print(len(elements), 'number elements made by make soy elements')
     return elements
 
 
@@ -65,7 +64,6 @@ def add_flanks(els, BDB):
     '''
     Searches and retrieves flanks for elements created from csv file
     '''
-    print(len(els), 'number elements to add', els)
     for i, e in enumerate(els):
         e.seq, e.left, e.right = get_seq_flanks(e.startLocation,
                                                 e.endLocation, e.accession, BDB, 20)

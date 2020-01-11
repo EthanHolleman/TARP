@@ -9,7 +9,7 @@ from Transposer.sam_utils import sort_elements
 from Transposer.sam_utils import sort_sams
 from Transposer.sam_utils import rename_elements
 from Transposer.sam_utils import pruner
-from Transposer.sam_utils import write_res  ults
+from Transposer.sam_utils import write_results
 
 from Backmap.backmap import *
 from Backmap.backmap_write import *
@@ -30,7 +30,7 @@ def main():
     acc_old = args.acc_o
     acc_cur = args.acc_c
     run_name = args.name
-    backmap = args.M
+    backmap = int(args.M)
     min = args.E
     feats = args.F
     summary = args.sum
@@ -50,22 +50,27 @@ def main():
     write_results(sels, out_base)
 
     print('Running Backmapping')
-    old_els = make_soy_elements(Backmap, acc_old)
+    old_els = make_soy_elements(summary, acc_old)
 
     if sum:
-        print('Running Backmapping')
-        old_els = make_soy_elements(Backmap, acc_old)
+        old_els = make_soy_elements(summary, acc_old)
         if backmap == 1:
-            min_log = os.path.join(new_run.write_dirs[2], run_name + '_log.txt')
+            min_log = os.path.join(
+                new_run.write_dirs[2], run_name + '_log.txt')
             matches, unmatches = run_min_distance(sels, old_els, min_log)
-        elif backmap == 2:
-            old_els = add_flanks(old_els, BDB_old)
-            matches, unmatches, flank_dict = test_exact(make_flank_dict(old_els), sels)
-            chr_index = chr_indexer(flank_dict)
-            matches, unmatches, chr_index = rum_ham(chr_index, unmatches, matches)
-        elif backmap == 3:
-            matches, unmatches, chr_index= anchored_Backmap(chr_index, unmatches,
-                                           matches, feats)
+        else:
+            if backmap == 2:
+                old_els = add_flanks(old_els, BDB_old)
+                flank_dict = make_flank_dict(old_els)
+                chr_index = chr_indexer(flank_dict)
+                matches, unmatches, flank_dict = test_exact(
+                    flank_dict, sels)
+                matches, unmatches, chr_index = rum_ham(
+                    chr_index, unmatches, matches)
+            elif backmap == 3:
+                chr_index = feature_sort(old_els, key=lambda x: x.startLocation)
+                matches, unmatches, chr_index = anchored_Backmap(chr_index, sels,
+                                                                 [], feats)
 
         match_path = os.path.join(
             new_run.write_dirs[2], run_name + '_matches.csv')

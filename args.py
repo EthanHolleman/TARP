@@ -84,7 +84,7 @@ def set_args():
         if args.sum == False:
             print('Please provide a soybase formated element summary file to run backmapping (-sum)')
             exit = True
-        elif args.M == 3 and args.F == False:
+        elif args.M == '3' and args.F == False:
             print('Please provide a genomic feature file (Genes or SNPs) to -F to run feature backmapping')
             exit = True
     if exit:

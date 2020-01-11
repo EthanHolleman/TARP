@@ -61,7 +61,6 @@ def is_ambigous_feature(chr, left_feat_ind, right_feat_ind, index):
     for el in index[chr - 1]:
         if el.startLocation > left_feat_ind and el.startLocation < right_feat_ind:
             c += 1
-            print(c, el.name, el.startLocation)
             if c > 1:
                 return True
     return False
