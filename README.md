@@ -56,10 +56,30 @@ Element ID	Reference	Class	Subclass	Order	Super Family	Family	Description	Unanch
 RLG_Gmr3_Gm1-1	Du et al. 2010 BMC Genomics 2010, 11:113	I	I	LTR	Gypsy	Gmr3	INTACT	Gm01		5622921	5628239
 ```
 Pass this file into TARP with the argument
-`-M [Your file path]`
+`-sum [Your file path]`  
 
-Currently, you can also run feature based backmapping in addition to flank based
-backmap. To do so download a vcf formatted file containing a collection of SNPs
-and store in a suitable directory. Pass this file into TARP with the argument
-`-F [Your file path]`. You must also supply an argument for `-M` to run feature
-based backmapping.
+Using just the summary file you will be able to run either flanking sequence
+based remapping or distance minimization remapping. To run a feature based remap
+supply either a file containing genes or vcf formatted SNP file.
+Pass this file into TARP with the argument `-F [Your file path]`.
+You must also supply an argument for `-sum` to run feature based backmapping.  
+
+Once you decide what method of backmapping to utilize, if any, identify it using
+the argument `-M` and refer to the chart below to select method.
+
+| Argument | Method                |
+|-----------|-----------------------|
+| 1         | Distance Minimization |
+| 2         | Flank Based           |
+| 3         | Feature Based         |
+
+### Example Command
+
+A generalized TARP command is shown below. Fill in the [] with paths that make
+sense for your machine.
+```
+./Tarp -I [Intact Elements] -S [Solo Elements] -P [Outdated Assembly BLAST DB] 
+-C [Current Assembly BLAST DB] -B [Bowtie2 Index] -acc_c [Current acc2chr file]
+-acc_o [Outdated acc2chr file] -M [Backmap integer] -sum [Summary File] 
+-F [Feature file (if M = 3)]
+```
