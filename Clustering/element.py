@@ -8,3 +8,7 @@ class ClstrElement():
         self.nt = nt
         self.rep = rep
         self.name = name
+
+    def __repr__(self):
+        (f'{self.__class__.__name__}('
+           f'{self.ID}, {self.similarity})')

@@ -1,8 +1,8 @@
 
 class Element:
 
-
-    def __init__(self, name, accession, chr, startLocation, endLocation, length, status, seq, left=None, right=None):
+    def __init__(self, name, accession, chr, startLocation, endLocation, length,
+                 status, seq, left=None, right=None):
         self.name = name
         self.accession = accession
         self.chr = int(chr)
@@ -13,6 +13,10 @@ class Element:
         self.seq = seq
         self.left = left
         self.right = right
+
+    def __repr__(self):
+        return (f'{self.__class__.__name__}('
+                      f'{self.name}, {self.startLocation})')
 
     def get_header(self):
         '''
@@ -27,12 +31,3 @@ class Element:
         '''
         return [self.name, self.accession, self.chr, self.startLocation,
                 self.length, self.status, self.seq, self.left, self.right]
-
-    def toStringFasta(self):
-        # sends element to 2 line string to be added to fasta file
-        return ">{},{},{},{},{},{}".format(self.name,
-                                           self.startLocation,
-                                           self.endLocation,
-                                           self.length,
-                                           self.status,
-                                           "\n" + self.seq)

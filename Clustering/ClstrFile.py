@@ -15,7 +15,6 @@ def make_element(element_string, cluster_num=None):
     Takes in a string with all ClstrElement info and returns
     and ClstrElement object.
     '''
-    # 0	10389nt, >name=RLG_Gmr1_Gm1-1... at +/82.14%
     element_string = element_string.strip()
     similarity = None
     rep = False
@@ -38,7 +37,8 @@ def make_element(element_string, cluster_num=None):
     if name[-3:] == '...':
         name = name[0:-3]  # removes ... if present in the header
 
-    return ClstrElement(name=name, ID=ID, similarity=similarity, nt=nt, rep=rep, cluster_num=cluster_num)
+    return ClstrElement(name=name, ID=ID, similarity=similarity, nt=nt,
+                        rep=rep, cluster_num=cluster_num)
 
 
 def read_cluster_file(path):
@@ -50,7 +50,6 @@ def read_cluster_file(path):
         with open(path, 'r') as clus_file:
             Cluster_set = set([])
             current_Cluster = None
-
             for line in clus_file:  # iterate through all lines in file
                 if line[0] == '>':  # line is a header
                     new_Cluster = read_cluster(line, parent_file=path)
@@ -64,8 +63,6 @@ def read_cluster_file(path):
                     # designated as current_Cluster
         return Cluster_set
     except (FileNotFoundError, IsADirectoryError) as e:
-        print(path, 'gave the following errors', e)
-        print('Empty set added')
         return set([])
 
 
@@ -75,22 +72,7 @@ class ClstrFile():
         self.path = path
         self.clusters_set = read_cluster_file(path)
 
-    def trim_clusters(self, min_elements=10):
-        '''Remove clusters from the cluster set that do not meet an min
-        number of elements threshold. Purpose is to use this before creating
-        fasta files from clusters to avoid making fastas of single element
-        clusters. Although the min elements could be set to one if you wanted
-        to do that.
-        '''
-        select_clstrs = set([])
-        for clstr in self.clusters_set:
-            if len(clstr.elements) >= min_elements:
-                select_clstrs.add(clstr)
-
-        self.clusters_set = select_clstrs
-
-
-    def write_cluster_fastas(self, original_fasta_path, path=os.getcwd(), new_dir=True):
+    def write_cluster_fastas(self, original_fasta_path, path):
         '''
         Iterates through all clusters in the cluster set and creates a fasta
         file of the elements in those clusters. Path is where new dir containing
@@ -99,12 +81,8 @@ class ClstrFile():
         files. Returns the path files are written to.
         '''
         search_dict = {}  # assumes full path
-        lines = read_as_tuples(original_fasta_path)  # read as tuples opens the file
+        lines = read_as_tuples(original_fasta_path)
         # all clusters of a file from the same original fasta
-        if new_dir is True:
-            path = os.path.join(path, os.path.basename(self.path.split('.')[0]))
-            if os.path.exists(path) is False:
-                os.mkdir(path)
 
         for element_tuple in lines:
             search_dict[element_tuple[0].split(' ')[0]] = element_tuple
@@ -118,10 +96,12 @@ class ClstrFile():
             fasta_paths.append(file_name)
             count = 0
             for clstr_element in cluster.elements:
+
                 if clstr_element.name in search_dict:
                     write_list.append(search_dict[clstr_element.name])
             # write all elements found in dictionart to cluster fasta file
             write_from_tuple_list(write_list, file_name)
+
             cluster.fasta = file_name  # change fasta variable of the cluster
 
         return fasta_paths
