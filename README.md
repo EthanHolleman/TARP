@@ -18,6 +18,22 @@ Additionally, using flanking sequence comparisons TART can distinguish between n
 
 ## Quick Start Guide
 
+### Install Dependencies
+
+On linux (I used Ubuntu) you can install most of the dependent programs
+using the command below.
+```
+sudo apt-get install cd-hit-est bowtie2 ncbi-blast+ clustalo emboss
+```
+TARP is currently using a few functions in another repository which can
+be installed using the pip command below. I intend to integrate these functions
+directly into TARP soon.
+
+```
+pip install git+https://github.com/EthanHolleman/fasta_tools
+```
+You are now ready to go!
+
 ### Gather Assembly Files
 Navigate to NCBI and find the assembly entry for the organism of interest. Then
 via the FTP site (using FTP is important to insure correct chromosome to accession
@@ -78,7 +94,7 @@ the argument `-M` and refer to the chart below to select method.
 A generalized TARP command is shown below. Fill in the [] with paths that make
 sense for your machine.
 ```
-./Tarp -I [Intact Elements] -S [Solo Elements] -P [Outdated Assembly BLAST DB] 
+./Tarp -I [Intact Elements] -S [Solo Elements] -P [Outdated Assembly BLAST DB]
 -C [Current Assembly BLAST DB] -B [Bowtie2 Index] -acc_c [Current acc2chr file]
 -acc_o [Outdated acc2chr file] -M [Backmap integer] -sum [Summary File]
 -F [Feature file (if M = 3)]
