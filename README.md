@@ -78,5 +78,8 @@ the argument `-M` and refer to the chart below to select method.
 A generalized TARP command is shown below. Fill in the [] with paths that make
 sense for your machine.
 ```
-./Tarp -I [Intact Elements] -S [Solo Elements] -P [Outdated Assembly BLAST DB] -C [Current Assembly BLAST DB] -B [Bowtie2 Index] -acc_c [Current acc2chr file] -acc_o [Outdated acc2chr file] -M [Backmap integer] -sum [Summary File] -F [Feature file (if M = 3)]
+./Tarp -I [Intact Elements] -S [Solo Elements] -P [Outdated Assembly BLAST DB] 
+-C [Current Assembly BLAST DB] -B [Bowtie2 Index] -acc_c [Current acc2chr file]
+-acc_o [Outdated acc2chr file] -M [Backmap integer] -sum [Summary File]
+-F [Feature file (if M = 3)]
 ```
