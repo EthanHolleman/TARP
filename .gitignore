@@ -7,4 +7,5 @@
 *.pyc
 
 #ignore graphing scripts
+#see the PAG poster link for the results :)
 graphing/
